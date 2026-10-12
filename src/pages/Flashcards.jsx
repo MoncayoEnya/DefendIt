@@ -1,10 +1,12 @@
 import { useMemo, useRef, useState } from 'react'
+import { Check, Keyboard, RotateCcw, Trophy, X, Zap } from 'lucide-react'
+import { BackLink, IconBox, PageHeader, ProgressBar } from '../components/ui.jsx'
 import { review } from '../lib/storage.js'
 import { maskTerm, similarity, shuffle } from '../lib/match.js'
 
 const SESSION = 10
 
-export default function Flashcards({ state, pack, update, addXP }) {
+export default function Flashcards({ state, pack, update, addXP, go }) {
   const [mode, setMode] = useState(null) // 'flip' | 'type'
   const [round, setRound] = useState(0)
 
@@ -18,43 +20,58 @@ export default function Flashcards({ state, pack, update, addXP }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pack.id, round])
 
-  const mastered = Object.entries(state.mastery[pack.id] || {}).filter(([k, v]) => k.startsWith('t') && v.box >= 3).length
+  const entries = Object.entries(state.mastery[pack.id] || {}).filter(([k]) => k.startsWith('t'))
+  const mastered = entries.filter(([, v]) => v.box >= 3).length
+  const dueNow = pack.terms.length - entries.filter(([, v]) => v.due > Date.now()).length
 
   if (!mode) {
     return (
-      <div className="space-y-5">
-        <div>
-          <p className="text-xs uppercase tracking-wider text-muted">Flashcards</p>
-          <h1 className="text-2xl font-bold">Lock in your key terms</h1>
-          <p className="text-muted">{mastered}/{pack.terms.length} mastered · cards you miss come back sooner</p>
+      <div className="mx-auto max-w-3xl">
+        <BackLink onClick={() => go('practice')}>Practice</BackLink>
+        <PageHeader eyebrow="Flashcards" title="Lock in your key terms" desc="Cards you miss come back sooner. Cards you know well wait longer." />
+        <div className="card mb-4 grid grid-cols-3 divide-x divide-line">
+          <Stat label="Mastered" value={`${mastered}/${pack.terms.length}`} />
+          <Stat label="Reviewed" value={entries.length} />
+          <Stat label="Due now" value={dueNow} />
         </div>
         <div className="grid gap-3 sm:grid-cols-2">
-          <ModeCard icon="🔄" title="Flip mode" desc="Read the clue, say the term in your head, flip and rate yourself." onClick={() => setMode('flip')} />
-          <ModeCard icon="⌨️" title="Type mode" desc="Read the clue and type the exact term. Typos are forgiven a little." onClick={() => setMode('type')} />
+          <ModeCard icon={RotateCcw} title="Flip mode" desc="Read the clue, recall the term, then flip and rate yourself." onClick={() => setMode('flip')} />
+          <ModeCard icon={Keyboard} tone="blue" title="Type mode" desc="Read the clue and type the term. Small typos are accepted." onClick={() => setMode('type')} />
         </div>
       </div>
     )
   }
 
   return (
-    <Session
-      key={round + mode}
-      mode={mode}
-      deck={deck}
-      onAnswer={(key, ok) => update((s) => ({ ...s, mastery: { ...s.mastery, [pack.id]: review(s.mastery[pack.id] || {}, key, ok) } }))}
-      onDone={(correct) => addXP(correct * (mode === 'type' ? 6 : 4), `${correct}/${deck.length} cards`)}
-      onAgain={() => setRound(round + 1)}
-      onExit={() => setMode(null)}
-    />
+    <div className="mx-auto max-w-2xl">
+      <Session
+        key={round + mode}
+        mode={mode}
+        deck={deck}
+        onAnswer={(key, ok) => update((s) => ({ ...s, mastery: { ...s.mastery, [pack.id]: review(s.mastery[pack.id] || {}, key, ok) } }))}
+        onDone={(correct) => addXP(correct * (mode === 'type' ? 6 : 4), `${correct}/${deck.length} cards`)}
+        onAgain={() => setRound(round + 1)}
+        onExit={() => setMode(null)}
+      />
+    </div>
   )
 }
 
-function ModeCard({ icon, title, desc, onClick }) {
+function Stat({ label, value }) {
   return (
-    <button onClick={onClick} className="card p-5 text-left transition hover:border-mint active:scale-[.98]">
-      <div className="text-3xl">{icon}</div>
-      <div className="mt-2 text-lg font-bold">{title}</div>
-      <div className="text-sm text-muted">{desc}</div>
+    <div className="p-4 text-center">
+      <div className="text-[20px] font-bold">{value}</div>
+      <div className="text-[12px] text-sub">{label}</div>
+    </div>
+  )
+}
+
+function ModeCard({ icon, title, desc, onClick, tone }) {
+  return (
+    <button onClick={onClick} className="card-link p-5 text-left">
+      <IconBox icon={icon} tone={tone} />
+      <div className="mt-3 text-[15px] font-semibold">{title}</div>
+      <div className="mt-0.5 text-[13px] text-sub">{desc}</div>
     </button>
   )
 }
@@ -96,10 +113,10 @@ function Session({ mode, deck, onAnswer, onDone, onAgain, onExit }) {
   if (i >= deck.length) {
     const pct = Math.round((correct / deck.length) * 100)
     return (
-      <div className="card pop p-8 text-center">
-        <div className="text-5xl">{pct >= 80 ? '🏆' : pct >= 50 ? '💪' : '📚'}</div>
-        <h2 className="mt-3 text-2xl font-bold">{correct}/{deck.length} correct</h2>
-        <p className="text-muted">{pct >= 80 ? 'Panel-ready on these terms!' : 'Missed cards will come back sooner. Keep going!'}</p>
+      <div className="card fade-up p-8 text-center">
+        <span className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-brand-soft text-brand"><Trophy size={24} strokeWidth={1.75} /></span>
+        <h2 className="mt-3 text-[22px] font-bold">{correct} of {deck.length} correct</h2>
+        <p className="mt-1 text-[13px] text-sub">{pct >= 80 ? 'You are panel-ready on these terms.' : 'Missed cards will return sooner. Keep going.'}</p>
         <div className="mt-5 flex justify-center gap-2">
           <button className="btn-primary" onClick={onAgain}>Next round</button>
           <button className="btn-ghost" onClick={onExit}>Change mode</button>
@@ -112,65 +129,55 @@ function Session({ mode, deck, onAnswer, onDone, onAgain, onExit }) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-3 text-sm">
-        <button className="text-muted" onClick={onExit}>← Back</button>
-        <div className="h-2 flex-1 overflow-hidden rounded-full bg-panel2">
-          <div className="h-full bg-mint transition-all" style={{ width: `${(i / deck.length) * 100}%` }} />
-        </div>
-        <span className="font-mono text-muted">{i + 1}/{deck.length}</span>
-        {combo >= 2 && <span className="pop font-mono font-bold text-gold">x{combo} combo</span>}
+      <div className="flex items-center gap-3">
+        <button className="text-[13px] font-medium text-sub hover:text-ink" onClick={onExit}>Exit</button>
+        <ProgressBar value={(i / deck.length) * 100} className="h-1.5 flex-1" />
+        <span className="text-[12px] font-medium text-sub">{i + 1} / {deck.length}</span>
+        {combo >= 2 && <span className="inline-flex items-center gap-1 text-[12px] font-semibold text-[#8a6a00]"><Zap size={14} /> {combo} streak</span>}
       </div>
 
       {mode === 'flip' ? (
         <>
-          <div className={`flip cursor-pointer ${flipped ? 'flipped' : ''}`} onClick={() => setFlipped(!flipped)}>
+          <div className={`flip cursor-pointer ${flipped ? 'flipped' : ''}`} onClick={() => setFlipped(!flipped)} role="button" tabIndex={0} onKeyDown={(e) => (e.key === ' ' || e.key === 'Enter') && setFlipped(!flipped)} aria-label="Flip card">
             <div className="flip-inner relative h-72">
               <div className="face card absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
-                <span className="chip mb-3">What term is this?</span>
-                <p className="text-lg leading-relaxed">{clue}</p>
-                <p className="mt-4 text-xs text-muted">tap to flip</p>
+                <span className="eyebrow mb-3">Which term is this?</span>
+                <p className="text-[17px] leading-relaxed">{clue}</p>
+                <p className="mt-4 text-[12px] text-sub">Tap to flip</p>
               </div>
-              <div className="face back card absolute inset-0 flex flex-col items-center justify-center border-mint/60 p-6 text-center">
-                <p className="text-3xl font-bold text-mint">{card.term}</p>
-                <p className="mt-3 text-sm text-muted">{card.definition}</p>
+              <div className="face back card absolute inset-0 flex flex-col items-center justify-center !border-brand-2/40 p-6 text-center">
+                <p className="text-[26px] font-bold text-brand">{card.term}</p>
+                <p className="mt-3 text-[13px] text-sub">{card.definition}</p>
               </div>
             </div>
           </div>
           {flipped ? (
             <div className="grid grid-cols-2 gap-2">
-              <button className="btn border border-rose/50 text-rose" onClick={() => next(false)}>✗ Missed it</button>
-              <button className="btn-primary" onClick={() => next(true)}>✓ Knew it</button>
+              <button className="btn h-11 border border-red/40 bg-white text-red hover:bg-red-soft" onClick={() => next(false)}><X size={16} /> Missed it</button>
+              <button className="btn-primary h-11" onClick={() => next(true)}><Check size={16} /> Knew it</button>
             </div>
           ) : (
-            <button className="btn-ghost w-full" onClick={() => setFlipped(true)}>Flip card</button>
+            <button className="btn-ghost h-11 w-full" onClick={() => setFlipped(true)}>Flip card</button>
           )}
         </>
       ) : (
-        <form onSubmit={check} className={`card space-y-4 p-6 ${result === 'wrong' ? 'shake border-rose/60' : result ? 'border-mint/60' : ''}`}>
-          <span className="chip">Type the term</span>
-          <p className="text-lg leading-relaxed">{clue}</p>
+        <form onSubmit={check} className={`card space-y-4 p-6 ${result === 'wrong' ? 'shake !border-red/50' : result ? '!border-brand-2/50' : ''}`}>
+          <span className="eyebrow">Type the term</span>
+          <p className="text-[17px] leading-relaxed">{clue}</p>
           <input
-            ref={inputRef}
-            autoFocus
-            className="input font-mono text-lg"
-            value={typed}
-            onChange={(e) => setTyped(e.target.value)}
-            placeholder="Your answer…"
-            autoCapitalize="off"
-            autoCorrect="off"
-            spellCheck="false"
-            readOnly={!!result}
+            ref={inputRef} autoFocus className="input !h-11 font-mono" value={typed} onChange={(e) => setTyped(e.target.value)}
+            placeholder="Your answer" aria-label="Your answer" autoCapitalize="off" autoCorrect="off" spellCheck="false" readOnly={!!result}
           />
           {result && (
-            <div className="pop">
-              {result === 'right' && <p className="font-bold text-mint">✓ Correct!</p>}
-              {result === 'close' && <p className="font-bold text-gold">≈ Close enough! Exact: <span className="font-mono">{card.term}</span></p>}
-              {result === 'wrong' && <p className="font-bold text-rose">✗ Answer: <span className="font-mono">{card.term}</span></p>}
+            <div className="fade-up text-[14px] font-semibold" aria-live="polite">
+              {result === 'right' && <p className="flex items-center gap-1.5 text-brand"><Check size={16} /> Correct</p>}
+              {result === 'close' && <p className="text-[#8a6a00]">Close enough. Exact term: <span className="font-mono">{card.term}</span></p>}
+              {result === 'wrong' && <p className="text-red">Answer: <span className="font-mono">{card.term}</span></p>}
             </div>
           )}
           <div className="flex gap-2">
-            {!result && <button type="button" className="btn-ghost" onClick={() => setResult('wrong')}>Show</button>}
-            <button className="btn-primary flex-1">{result ? 'Next →' : 'Check'}</button>
+            {!result && <button type="button" className="btn-ghost" onClick={() => setResult('wrong')}>Show answer</button>}
+            <button className="btn-primary flex-1">{result ? 'Next card' : 'Check'}</button>
           </div>
         </form>
       )}

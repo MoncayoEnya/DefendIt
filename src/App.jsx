@@ -1,39 +1,44 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { FileUp } from 'lucide-react'
 import { load, save, levelInfo, today } from './lib/storage.js'
-import Home from './pages/Home.jsx'
+import { extractText } from './lib/extract.js'
+import { buildOfflinePack } from './lib/offline.js'
+import { buildAiPack } from './lib/ai.js'
+import { DEMO_PACK } from './lib/demo.js'
+import { BottomNavigation, DesktopHeader, MobileHeader, Toast } from './components/Layout.jsx'
+import Overview from './pages/Overview.jsx'
 import Guide from './pages/Guide.jsx'
+import Practice from './pages/Practice.jsx'
 import Flashcards from './pages/Flashcards.jsx'
 import TypingDefense from './pages/TypingDefense.jsx'
 import MockPanel from './pages/MockPanel.jsx'
 import Confidence from './pages/Confidence.jsx'
+import More from './pages/More.jsx'
 import Settings from './pages/Settings.jsx'
 
-const TABS = [
-  { id: 'home', label: 'Home', icon: '⌂' },
-  { id: 'guide', label: 'Guide', icon: '📖', needsPack: true },
-  { id: 'cards', label: 'Cards', icon: '🃏', needsPack: true },
-  { id: 'typing', label: 'Typing', icon: '⌨️', needsPack: true },
-  { id: 'panel', label: 'Boss', icon: '⚔️', needsPack: true },
-  { id: 'confidence', label: 'Confidence', icon: '💪' },
-]
+const NEEDS_PACK = ['guide', 'cards', 'typing', 'panel']
+const PAGES = { overview: Overview, guide: Guide, practice: Practice, cards: Flashcards, typing: TypingDefense, panel: MockPanel, confidence: Confidence, more: More, settings: Settings }
 
 export default function App() {
   const [state, setState] = useState(load)
-  const [tab, setTab] = useState(() => location.hash.slice(1) || 'home')
+  const [tab, setTab] = useState(() => (PAGES[location.hash.slice(1)] ? location.hash.slice(1) : 'overview'))
   const [toast, setToast] = useState(null)
+  const [busy, setBusy] = useState(null)
+  const [uploadError, setUploadError] = useState('')
+  const fileRef = useRef()
 
   useEffect(() => save(state), [state])
   useEffect(() => {
-    const onHash = () => setTab(location.hash.slice(1) || 'home')
+    const onHash = () => setTab(PAGES[location.hash.slice(1)] ? location.hash.slice(1) : 'overview')
     window.addEventListener('hashchange', onHash)
     return () => window.removeEventListener('hashchange', onHash)
   }, [])
 
-  const go = (id) => {
-    location.hash = id
+  const go = useCallback((id) => {
+    if (location.hash.slice(1) !== id) location.hash = id
     setTab(id)
     window.scrollTo(0, 0)
-  }
+  }, [])
 
   const update = useCallback((fn) => setState((s) => fn(structuredClone(s))), [])
 
@@ -50,81 +55,91 @@ export default function App() {
         p.lastDay = d
       }
       const after = levelInfo(p.xp)
-      setToast({ text: after.level > before ? `LEVEL UP! You are now a ${after.name} 🎉` : `+${amount} XP${why ? ' · ' + why : ''}`, big: after.level > before })
+      setToast(after.level > before ? { text: `Level up: you are now ${after.name}`, big: true } : { text: `+${amount} XP${why ? ' · ' + why : ''}` })
       return { ...s, profile: p }
     })
   }, [])
 
   useEffect(() => {
     if (!toast) return
-    const t = setTimeout(() => setToast(null), toast.big ? 3500 : 1800)
+    const t = setTimeout(() => setToast(null), toast.big ? 3500 : 2000)
     return () => clearTimeout(t)
   }, [toast])
 
-  const pack = state.packs.find((p) => p.id === state.activeId)
-  const lv = levelInfo(state.profile.xp)
-  const props = { state, update, addXP, pack, go }
+  async function upload(file) {
+    if (!file) return
+    setUploadError('')
+    try {
+      setBusy('Reading your file')
+      const text = await extractText(file, (p) => setBusy(`Reading your file · ${Math.round(p * 100)}%`))
+      let built
+      if (state.settings.apiKey) {
+        setBusy('AI is studying your paper · about 20 to 60 seconds')
+        try {
+          built = await buildAiPack(state.settings, text, file.name)
+        } catch (e) {
+          setUploadError(`AI could not process the file (${e.message}). Offline mode was used instead.`)
+          built = buildOfflinePack(text, file.name)
+        }
+      } else {
+        setBusy('Building your study pack')
+        built = buildOfflinePack(text, file.name)
+      }
+      const id = crypto.randomUUID()
+      update((s) => {
+        s.packs.unshift({ ...built, id, createdAt: Date.now() })
+        s.activeId = id
+        return s
+      })
+      addXP(25, 'Thesis imported')
+      go('guide')
+    } catch (e) {
+      setUploadError(e.message || 'Something went wrong reading that file.')
+    } finally {
+      setBusy(null)
+      if (fileRef.current) fileRef.current.value = ''
+    }
+  }
 
-  const current = TABS.find((t) => t.id === tab)
-  const blocked = current?.needsPack && !pack
+  function loadDemo() {
+    update((s) => {
+      if (!s.packs.some((p) => p.id === 'demo')) s.packs.push({ ...DEMO_PACK, id: 'demo', sample: true, createdAt: Date.now() })
+      s.activeId = 'demo'
+      return s
+    })
+    go('overview')
+  }
+
+  const pack = state.packs.find((p) => p.id === state.activeId)
+  const uploader = { pick: () => fileRef.current?.click(), loadDemo, busy, error: uploadError, clearError: () => setUploadError('') }
+  const props = { state, update, addXP, pack, go, uploader }
+  const Page = PAGES[tab] || Overview
+  const blocked = NEEDS_PACK.includes(tab) && !pack
 
   return (
-    <div className="mx-auto max-w-3xl px-4 pb-28 pt-4">
-      <header className="mb-5 flex items-center gap-3">
-        <button onClick={() => go('home')} className="flex items-center gap-2">
-          <img src="/icon.svg" alt="" className="h-9 w-9" />
-          <span className="text-xl font-bold tracking-tight">Defend<span className="text-mint">It</span></span>
-        </button>
-        <div className="ml-auto flex items-center gap-3">
-          <div className="hidden text-right sm:block">
-            <div className="text-xs text-muted">Lv {lv.level} · {lv.name}</div>
-            <div className="mt-1 h-1.5 w-32 overflow-hidden rounded-full bg-panel2">
-              <div className="h-full bg-gradient-to-r from-mint to-gold" style={{ width: `${lv.pct * 100}%` }} />
+    <div className="min-h-screen">
+      <DesktopHeader tab={tab} go={go} state={state} update={update} />
+      <MobileHeader go={go} state={state} update={update} />
+      <input ref={fileRef} type="file" accept=".pdf,.docx,.txt,.md" className="hidden" onChange={(e) => upload(e.target.files[0])} />
+
+      <main className="mx-auto max-w-[1240px] px-4 pb-28 pt-5 md:px-6 md:pb-12 md:pt-7 lg:px-8">
+        {blocked ? (
+          <div className="card mx-auto max-w-md p-8 text-center">
+            <span className="mx-auto mb-3 grid h-11 w-11 place-items-center rounded-md bg-brand-soft text-brand"><FileUp size={22} strokeWidth={1.75} /></span>
+            <h1 className="text-[17px] font-semibold">Upload your thesis first</h1>
+            <p className="mt-1 text-[13px] text-sub">This section is built from your document.</p>
+            <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:justify-center">
+              <button className="btn-primary" onClick={uploader.pick}>Upload thesis</button>
+              <button className="btn-outline" onClick={loadDemo}>Use sample thesis</button>
             </div>
           </div>
-          <span className="chip font-mono !text-gold">🔥 {state.profile.streak}</span>
-          <span className="chip font-mono !text-mint">{state.profile.xp} XP</span>
-          <button onClick={() => go('settings')} className="btn-ghost !px-2.5 !py-1.5" aria-label="Settings">⚙︎</button>
-        </div>
-      </header>
+        ) : (
+          <Page key={tab} {...props} />
+        )}
+      </main>
 
-      {blocked ? (
-        <div className="card p-8 text-center">
-          <p className="mb-4 text-muted">Upload your thesis first so this mode can be built from it.</p>
-          <button className="btn-primary" onClick={() => go('home')}>Upload a file</button>
-        </div>
-      ) : (
-        <>
-          {tab === 'home' && <Home {...props} />}
-          {tab === 'guide' && <Guide {...props} />}
-          {tab === 'cards' && <Flashcards {...props} />}
-          {tab === 'typing' && <TypingDefense {...props} />}
-          {tab === 'panel' && <MockPanel {...props} />}
-          {tab === 'confidence' && <Confidence {...props} />}
-          {tab === 'settings' && <Settings {...props} />}
-        </>
-      )}
-
-      {toast && (
-        <div className={`pop fixed left-1/2 top-4 z-50 -translate-x-1/2 rounded-full px-5 py-2 font-bold shadow-lg ${toast.big ? 'bg-gold text-ink' : 'bg-mint text-ink'}`}>
-          {toast.text}
-        </div>
-      )}
-
-      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-ink/95 backdrop-blur" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
-        <div className="mx-auto flex max-w-3xl justify-between px-2">
-          {TABS.map((t) => (
-            <button
-              key={t.id}
-              onClick={() => go(t.id)}
-              className={`flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[11px] transition ${tab === t.id ? 'text-mint' : 'text-muted'} ${t.needsPack && !pack ? 'opacity-40' : ''}`}
-            >
-              <span className="text-lg leading-none">{t.icon}</span>
-              {t.label}
-            </button>
-          ))}
-        </div>
-      </nav>
+      <BottomNavigation tab={tab} go={go} />
+      <Toast toast={toast} />
     </div>
   )
 }

@@ -1,0 +1,130 @@
+import { ChevronRight } from 'lucide-react'
+
+export function CircularProgress({ value, size = 128, stroke = 12, label }) {
+  const r = (size - stroke) / 2
+  const c = 2 * Math.PI * r
+  return (
+    <div className="relative shrink-0" style={{ width: size, height: size }} role="img" aria-label={label || `${value}% complete`}>
+      <svg width={size} height={size} className="-rotate-90">
+        <circle cx={size / 2} cy={size / 2} r={r} stroke="var(--color-track)" strokeWidth={stroke} fill="none" />
+        <circle
+          cx={size / 2} cy={size / 2} r={r} stroke="var(--color-brand)" strokeWidth={stroke} fill="none"
+          strokeLinecap="round" strokeDasharray={c} strokeDashoffset={c * (1 - Math.min(value, 100) / 100)}
+          style={{ transition: 'stroke-dashoffset .6s ease' }}
+        />
+      </svg>
+      <div className="absolute inset-0 grid place-items-center">
+        <span className="font-bold tracking-tight" style={{ fontSize: size * 0.22 }}>{value}%</span>
+      </div>
+    </div>
+  )
+}
+
+export function ProgressBar({ value, color = 'bg-brand-2', className = 'h-1.5' }) {
+  return (
+    <div className={`w-full overflow-hidden rounded-full bg-track ${className}`}>
+      <div className={`h-full rounded-full ${color} transition-all duration-500`} style={{ width: `${Math.max(0, Math.min(value, 100))}%` }} />
+    </div>
+  )
+}
+
+export function MetricRow({ label, value, color, compact }) {
+  return (
+    <div className={`grid items-center gap-3 ${compact ? 'grid-cols-[1fr_auto] gap-y-1' : 'grid-cols-[84px_1fr_36px]'}`}>
+      <span className={`${compact ? 'text-[11px]' : 'text-[13px]'} text-ink`}>{label}</span>
+      {compact && <span className="text-right text-[11px] font-semibold">{value}%</span>}
+      <div className={compact ? 'col-span-2' : ''}><ProgressBar value={value} color={color} className={compact ? 'h-1.5' : 'h-2'} /></div>
+      {!compact && <span className="text-right text-[13px] font-semibold">{value}%</span>}
+    </div>
+  )
+}
+
+export function PageHeader({ eyebrow, title, desc, right }) {
+  return (
+    <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
+      <div className="min-w-0">
+        {eyebrow && <p className="eyebrow mb-1.5">{eyebrow}</p>}
+        <h1 className="text-[22px] font-bold leading-tight tracking-tight md:text-[28px]">{title}</h1>
+        {desc && <p className="mt-1 max-w-2xl text-[13px] text-sub md:text-[14px]">{desc}</p>}
+      </div>
+      {right}
+    </div>
+  )
+}
+
+export function SectionTitle({ children, right }) {
+  return (
+    <div className="mb-2.5 mt-6 flex items-center justify-between gap-2">
+      <h2 className="text-[15px] font-semibold md:text-[17px]">{children}</h2>
+      {right}
+    </div>
+  )
+}
+
+export function IconBox({ icon: Icon, tone = 'brand', size = 'md' }) {
+  const tones = {
+    brand: 'bg-brand-soft text-brand',
+    blue: 'bg-blue-soft text-blue',
+    yellow: 'bg-yellow-soft text-[#8a6a00]',
+    red: 'bg-red-soft text-red',
+    plain: 'text-ink',
+  }
+  const s = size === 'sm' ? 'h-8 w-8' : 'h-10 w-10'
+  return (
+    <span className={`grid shrink-0 place-items-center rounded-md ${s} ${tones[tone]}`}>
+      <Icon size={size === 'sm' ? 17 : 20} strokeWidth={1.75} aria-hidden />
+    </span>
+  )
+}
+
+export function ListLink({ icon, title, meta, onClick, tone = 'plain', right }) {
+  return (
+    <button onClick={onClick} className="card-link flex w-full items-center gap-3.5 p-4 text-left">
+      <IconBox icon={icon} tone={tone} />
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-[14px] font-semibold">{title}</span>
+        {meta && <span className="block truncate text-[12px] text-sub">{meta}</span>}
+      </span>
+      {right}
+      <ChevronRight size={18} className="shrink-0 text-sub" aria-hidden />
+    </button>
+  )
+}
+
+export function Notice({ tone = 'yellow', icon: Icon, children }) {
+  const tones = {
+    yellow: 'bg-yellow-soft border-yellow/50 text-[#6b5300]',
+    red: 'bg-red-soft border-red/40 text-[#9b3434]',
+    green: 'bg-brand-soft border-brand-2/30 text-brand',
+    blue: 'bg-blue-soft border-blue/30 text-blue',
+  }
+  return (
+    <div className={`flex gap-2.5 rounded-md border p-3 text-[13px] ${tones[tone]}`}>
+      {Icon && <Icon size={17} strokeWidth={1.75} className="mt-px shrink-0" aria-hidden />}
+      <div>{children}</div>
+    </div>
+  )
+}
+
+export function Checkbox({ checked, onChange, label, sub, strike }) {
+  return (
+    <label className="flex min-h-9 cursor-pointer items-center gap-3 rounded-md py-1.5">
+      <input type="checkbox" className="peer sr-only" checked={checked} onChange={(e) => onChange(e.target.checked)} />
+      <span className={`grid h-[18px] w-[18px] shrink-0 place-items-center rounded-[4px] border transition-colors peer-focus-visible:ring-2 peer-focus-visible:ring-brand-2 ${checked ? 'border-brand bg-brand' : 'border-[#c4ced6] bg-white'}`}>
+        {checked && <svg viewBox="0 0 16 16" className="h-3 w-3" aria-hidden><path d="M3.5 8.5l3 3 6-7" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" /></svg>}
+      </span>
+      <span className="min-w-0">
+        <span className={`block text-[13px] ${checked && strike ? 'text-sub line-through' : ''}`}>{label}</span>
+        {sub && <span className="block text-[12px] text-sub">{sub}</span>}
+      </span>
+    </label>
+  )
+}
+
+export function BackLink({ onClick, children = 'Back' }) {
+  return (
+    <button onClick={onClick} className="mb-3 inline-flex h-8 items-center gap-1 text-[13px] font-medium text-sub hover:text-ink">
+      <ChevronRight size={16} className="rotate-180" aria-hidden /> {children}
+    </button>
+  )
+}

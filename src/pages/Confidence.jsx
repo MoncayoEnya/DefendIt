@@ -1,4 +1,6 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { Lightbulb, MessageCircleQuestion, Mic, RefreshCw, Square, Wind } from 'lucide-react'
+import { Checkbox, IconBox, PageHeader, ProgressBar, SectionTitle } from '../components/ui.jsx'
 import { canListen, countFillers, startListening } from '../lib/voice.js'
 
 const SCRIPTS = [
@@ -48,58 +50,57 @@ export default function Confidence({ state, update, addXP }) {
   const checked = state.profile.checklist || {}
   const done = CHECKLIST.filter((_, i) => checked[i]).length
 
+  const bump = useCallback((key) => update((s) => ({ ...s, profile: { ...s.profile, confidence: { ...(s.profile.confidence || {}), [key]: ((s.profile.confidence || {})[key] || 0) + 1 } } })), [update])
+
   return (
-    <div className="space-y-6">
-      <div>
-        <p className="text-xs uppercase tracking-wider text-muted">Confidence lab</p>
-        <h1 className="text-2xl font-bold">💪 Don't be shy. Be ready.</h1>
-        <p className="text-muted">Confidence comes from preparation plus practice speaking out loud. Train both here.</p>
+    <div>
+      <PageHeader eyebrow="Confidence" title="Calm, clear and ready" desc="Confidence comes from preparation and from practicing out loud. Train both here." />
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <Breathing onDone={() => { bump('breaths'); addXP(10, 'Breathing exercise') }} />
+        <SpeakDrill onDone={(clean) => { bump('drills'); addXP(clean ? 20 : 12, 'Speaking drill') }} />
       </div>
 
-      <Breathing onDone={() => addXP(10, 'Calm mind')} />
-      <SpeakDrill onDone={(clean) => addXP(clean ? 20 : 12, 'Speaking drill')} />
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+        <div className="min-w-0">
+          <SectionTitle>Helpful lines for hard moments</SectionTitle>
+          <div className="card divide-y divide-line">
+            {SCRIPTS.map((s, i) => (
+              <div key={i} className="flex gap-3 p-4">
+                <MessageCircleQuestion size={18} strokeWidth={1.75} className="mt-0.5 shrink-0 text-brand-2" aria-hidden />
+                <div>
+                  <div className="text-[12px] font-semibold text-sub">When {s.when.toLowerCase()}</div>
+                  <p className="mt-0.5 text-[14px]">"{s.say}"</p>
+                </div>
+              </div>
+            ))}
+          </div>
 
-      <section>
-        <h2 className="mb-2 text-sm uppercase tracking-wider text-muted">Lifesaver lines</h2>
-        <div className="space-y-2">
-          {SCRIPTS.map((s, i) => (
-            <div key={i} className="card p-4">
-              <div className="text-xs font-bold uppercase text-gold">When {s.when.toLowerCase()}</div>
-              <p className="mt-1">"{s.say}"</p>
-            </div>
-          ))}
+          <SectionTitle>Tips from good defenders</SectionTitle>
+          <div className="grid gap-2 sm:grid-cols-2">
+            {TIPS.map(([t, d]) => (
+              <div key={t} className="card flex gap-3 p-4">
+                <Lightbulb size={17} strokeWidth={1.75} className="mt-0.5 shrink-0 text-[#b38a00]" aria-hidden />
+                <div>
+                  <div className="text-[13px] font-semibold">{t}</div>
+                  <div className="text-[12px] leading-snug text-sub">{d}</div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
-      </section>
 
-      <section>
-        <h2 className="mb-2 text-sm uppercase tracking-wider text-muted">Pro tips</h2>
-        <div className="grid gap-2 sm:grid-cols-2">
-          {TIPS.map(([t, d]) => (
-            <div key={t} className="card p-4">
-              <div className="font-bold text-mint">{t}</div>
-              <div className="text-sm text-[#cfd4f5]">{d}</div>
-            </div>
-          ))}
+        <div className="min-w-0">
+          <SectionTitle right={<span className="text-[12px] text-sub">{done} of {CHECKLIST.length}</span>}>Defense-day checklist</SectionTitle>
+          <section className="card p-4">
+            <ProgressBar value={(done / CHECKLIST.length) * 100} color="bg-yellow" className="mb-2 h-1.5" />
+            {CHECKLIST.map((c, i) => (
+              <Checkbox key={i} checked={!!checked[i]} strike label={c}
+                onChange={(v) => update((s) => ({ ...s, profile: { ...s.profile, checklist: { ...(s.profile.checklist || {}), [i]: v } } }))} />
+            ))}
+          </section>
         </div>
-      </section>
-
-      <section className="card p-5">
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="font-bold">✅ Defense-day checklist</h2>
-          <span className="font-mono text-sm text-mint">{done}/{CHECKLIST.length}</span>
-        </div>
-        {CHECKLIST.map((c, i) => (
-          <label key={i} className="flex cursor-pointer items-center gap-3 rounded-lg p-2 hover:bg-panel2">
-            <input
-              type="checkbox"
-              className="h-5 w-5 accent-[var(--color-mint)]"
-              checked={!!checked[i]}
-              onChange={(e) => update((s) => ({ ...s, profile: { ...s.profile, checklist: { ...checked, [i]: e.target.checked } } }))}
-            />
-            <span className={checked[i] ? 'text-muted line-through' : ''}>{c}</span>
-          </label>
-        ))}
-      </section>
+      </div>
     </div>
   )
 }
@@ -108,7 +109,10 @@ function Breathing({ onDone }) {
   const [on, setOn] = useState(false)
   const [step, setStep] = useState(0)
   const [rounds, setRounds] = useState(0)
+  const [finished, setFinished] = useState(false)
   const STEPS = ['Breathe in', 'Hold', 'Breathe out', 'Hold']
+  const doneRef = useRef(onDone)
+  doneRef.current = onDone
 
   useEffect(() => {
     if (!on) return
@@ -124,21 +128,30 @@ function Breathing({ onDone }) {
   useEffect(() => {
     if (rounds >= 4 && on) {
       setOn(false)
-      onDone()
+      setFinished(true)
+      doneRef.current()
     }
-  }, [rounds, on, onDone])
+  }, [rounds, on])
 
-  const big = step === 0 || step === 1
+  const big = on && (step === 0 || step === 1)
   return (
-    <section className="card p-5 text-center">
-      <h2 className="font-bold">🫁 Box breathing · 1 minute</h2>
-      <p className="text-sm text-muted">Use this right before you enter the room.</p>
-      <div className="my-6 grid h-40 place-items-center">
-        <div className={`grid place-items-center rounded-full border-2 border-mint bg-mint/10 transition-all ease-in-out ${big && on ? 'h-40 w-40' : 'h-20 w-20'}`} style={{ transitionDuration: '4000ms' }}>
-          <span className="text-sm font-bold text-mint">{on ? STEPS[step] : rounds >= 4 ? 'Nice ✓' : 'Ready'}</span>
+    <section className="card mt-0 p-5">
+      <div className="flex items-start gap-3">
+        <IconBox icon={Wind} tone="blue" size="sm" />
+        <div>
+          <h2 className="text-[15px] font-semibold">Box breathing</h2>
+          <p className="text-[12px] text-sub">One minute. Use it right before you enter the room.</p>
         </div>
       </div>
-      <button className={on ? 'btn-ghost' : 'btn-primary'} onClick={() => { setOn(!on); setStep(0); setRounds(0) }}>{on ? `Stop (${rounds}/4)` : 'Start'}</button>
+      <div className="my-5 grid h-36 place-items-center">
+        <div className={`grid place-items-center rounded-full border-2 border-blue/60 bg-blue-soft transition-all ease-in-out ${big ? 'h-36 w-36' : 'h-20 w-20'}`} style={{ transitionDuration: '4000ms' }}>
+          <span className="text-[12px] font-semibold text-blue">{on ? STEPS[step] : finished ? 'Done' : 'Ready'}</span>
+        </div>
+      </div>
+      <div className="flex items-center justify-between">
+        <span className="text-[12px] text-sub">{on ? `Round ${Math.min(rounds + 1, 4)} of 4` : '4 rounds · 4 seconds each step'}</span>
+        <button className={on ? 'btn-ghost' : 'btn-primary'} onClick={() => { setOn(!on); setStep(0); setRounds(0); setFinished(false) }}>{on ? 'Stop' : 'Start'}</button>
+      </div>
     </section>
   )
 }
@@ -173,30 +186,36 @@ function SpeakDrill({ onDone }) {
     const words = text.trim().split(/\s+/).filter(Boolean).length
     const minutes = Math.max((Date.now() - startRef.current) / 60000, 1 / 60)
     const f = countFillers(text)
-    const wpm = Math.round(words / minutes)
-    setReport({ words, wpm, fillers: f })
+    setReport({ words, wpm: Math.round(words / minutes), fillers: f })
     if (words > 5) onDone(f.total <= 1)
   }
 
   return (
     <section className="card p-5">
-      <h2 className="font-bold">🎙 Speaking drill</h2>
-      <p className="text-sm text-muted">Say it out loud. We count your speed and filler words.</p>
-      <div className="my-4 rounded-xl bg-panel2 p-4 text-lg font-medium">"{prompt}"</div>
+      <div className="flex items-start gap-3">
+        <IconBox icon={Mic} tone="yellow" size="sm" />
+        <div>
+          <h2 className="text-[15px] font-semibold">Speaking drill</h2>
+          <p className="text-[12px] text-sub">Answer out loud. We measure your pace and filler words.</p>
+        </div>
+      </div>
+      <div className="my-4 rounded-md border border-line bg-bg p-4 text-[15px] font-medium">{prompt}</div>
       {!canListen ? (
-        <p className="text-sm text-gold">Voice works best in Chrome (Android or desktop). You can still practice out loud with the prompt above.</p>
+        <p className="text-[12px] text-sub">Voice works best in Chrome on Android or desktop. You can still practice out loud with the prompt above.</p>
       ) : (
         <div className="flex flex-wrap items-center gap-2">
-          {rec ? <button className="btn animate-pulse bg-rose text-ink" onClick={stop}>■ Stop · {secs}s</button> : <button className="btn-primary" onClick={start}>🎤 Start talking</button>}
-          <button className="btn-ghost" onClick={() => { setPrompt(PROMPTS[(PROMPTS.indexOf(prompt) + 1) % PROMPTS.length]); setReport(null); setText('') }}>New prompt</button>
+          {rec
+            ? <button className="btn border border-red bg-red-soft text-red" onClick={stop}><Square size={13} className="fill-current" /> Stop · {secs}s</button>
+            : <button className="btn-primary" onClick={start}><Mic size={16} /> Start speaking</button>}
+          <button className="btn-ghost" onClick={() => { setPrompt(PROMPTS[(PROMPTS.indexOf(prompt) + 1) % PROMPTS.length]); setReport(null); setText('') }}><RefreshCw size={15} /> New prompt</button>
         </div>
       )}
-      {text && <p className="mt-3 text-sm text-[#cfd4f5]">{text}</p>}
+      {text && <p className="mt-3 text-[13px] text-sub">{text}</p>}
       {report && (
-        <div className="pop mt-4 grid grid-cols-3 gap-2 text-center">
-          <Stat label="Words/min" value={report.wpm} good={report.wpm >= 110 && report.wpm <= 160} hint={report.wpm > 160 ? 'slow down' : report.wpm < 110 ? 'a bit slow' : 'great pace'} />
-          <Stat label="Fillers" value={report.fillers.total} good={report.fillers.total <= 1} hint={report.fillers.total <= 1 ? 'clean!' : Object.keys(report.fillers.found).join(', ')} />
-          <Stat label="Words" value={report.words} good={report.words >= 20} hint={report.words >= 20 ? 'solid' : 'say more'} />
+        <div className="fade-up mt-4 grid grid-cols-3 divide-x divide-line rounded-md border border-line">
+          <Stat label="Words per min" value={report.wpm} good={report.wpm >= 110 && report.wpm <= 160} hint={report.wpm > 160 ? 'Slow down' : report.wpm < 110 ? 'A little slow' : 'Good pace'} />
+          <Stat label="Filler words" value={report.fillers.total} good={report.fillers.total <= 1} hint={report.fillers.total <= 1 ? 'Clean' : Object.keys(report.fillers.found).join(', ')} />
+          <Stat label="Words" value={report.words} good={report.words >= 20} hint={report.words >= 20 ? 'Solid' : 'Say more'} />
         </div>
       )}
     </section>
@@ -205,10 +224,10 @@ function SpeakDrill({ onDone }) {
 
 function Stat({ label, value, good, hint }) {
   return (
-    <div className="rounded-xl bg-panel2 p-3">
-      <div className={`font-mono text-2xl font-bold ${good ? 'text-mint' : 'text-gold'}`}>{value}</div>
-      <div className="text-xs text-muted">{label}</div>
-      <div className="text-xs">{hint}</div>
+    <div className="p-3 text-center">
+      <div className={`text-[20px] font-bold ${good ? 'text-brand' : 'text-[#8a6a00]'}`}>{value}</div>
+      <div className="text-[11px] text-sub">{label}</div>
+      <div className="truncate text-[11px]">{hint}</div>
     </div>
   )
 }

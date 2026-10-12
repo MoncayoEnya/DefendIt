@@ -35,15 +35,22 @@ To test on your phone, connect to the same Wi-Fi and open the "Network" link it 
 ## Project structure
 ```
 src/
-  App.jsx               navigation, XP, levels, streak
-  lib/extract.js        reads PDF / Word / txt in the browser
-  lib/offline.js        offline study pack builder (no AI)
-  lib/ai.js             Gemini prompts: study pack + answer grading
-  lib/voice.js          speech-to-text + filler word counter
-  lib/storage.js        saving progress, levels, spaced repetition
-  lib/demo.js           demo thesis to try the app
-  pages/                Home, Guide, Flashcards, TypingDefense, MockPanel, Confidence, Settings
+  App.jsx                    routing, uploads, XP, levels, streak
+  components/Layout.jsx      DesktopHeader, MobileHeader, BottomNavigation, profile menu, toast
+  components/Dashboard.jsx   WelcomeSection, ThesisUploadCard, SessionCard, ReadinessCard, FocusChecklist, ThesisDocumentCard
+  components/ui.jsx          CircularProgress, ProgressBar, Checkbox and other building blocks
+  lib/progress.js            readiness score (knowledge, practice, confidence) from real activity
+  lib/extract.js             reads PDF / Word / txt in the browser
+  lib/offline.js             offline study pack builder (no AI)
+  lib/ai.js                  Gemini prompts: study pack + answer grading
+  lib/voice.js               speech-to-text + filler word counter
+  lib/storage.js             saving progress, levels, spaced repetition
+  lib/demo.js                sample thesis
+  pages/                     Overview, Guide, Practice, Flashcards, TypingDefense, MockPanel, Confidence, More, Settings
 ```
+
+## Design
+Light, clean dashboard style. Colors live in `src/index.css` (`@theme`): primary green #075B3D, background #F4F7F9, blue for practice, yellow for confidence. Icons come from Lucide (`lucide-react`), no emojis.
 
 ## Ideas for next versions
 - Accounts and cloud sync (Supabase or Firebase free plan)

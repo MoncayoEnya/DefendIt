@@ -1,54 +1,76 @@
 import { useEffect, useRef, useState } from 'react'
+import { Heart, Play, RotateCcw, Target, Trophy } from 'lucide-react'
+import { BackLink, PageHeader } from '../components/ui.jsx'
 import { maskTerm, norm, shuffle } from '../lib/match.js'
 
 const LIVES = 3
 
-export default function TypingDefense({ state, pack, update, addXP }) {
+export default function TypingDefense({ state, pack, update, addXP, go }) {
   const best = state.profile.best?.[`typing:${pack.id}`] || 0
   const [phase, setPhase] = useState('menu') // menu | play | over
   const [final, setFinal] = useState(null)
+  const [prevBest, setPrevBest] = useState(best)
 
   function finish(result) {
+    setPrevBest(best)
     setFinal(result)
     setPhase('over')
-    addXP(Math.min(Math.round(result.score / 25), 120), 'Typing Defense')
-    if (result.score > best) {
-      update((s) => ({ ...s, profile: { ...s.profile, best: { ...s.profile.best, [`typing:${pack.id}`]: result.score } } }))
-    }
+    addXP(Math.min(Math.round(result.score / 25), 120), 'Typing defense')
+    update((s) => {
+      const p = s.packs.find((x) => x.id === pack.id)
+      p.typingSessions = (p.typingSessions || 0) + 1
+      if (result.score > (s.profile.best?.[`typing:${pack.id}`] || 0)) s.profile.best = { ...s.profile.best, [`typing:${pack.id}`]: result.score }
+      return s
+    })
   }
 
-  if (phase === 'play') return <Game pack={pack} onEnd={finish} />
+  if (phase === 'play') {
+    return (
+      <div className="mx-auto max-w-3xl">
+        <Game pack={pack} onEnd={finish} />
+      </div>
+    )
+  }
+
+  const newBest = final && final.score > prevBest
 
   return (
-    <div className="space-y-5">
-      <div>
-        <p className="text-xs uppercase tracking-wider text-muted">Game</p>
-        <h1 className="text-2xl font-bold">⌨️ Typing Defense</h1>
-        <p className="text-muted">Terms from your thesis are falling on your defense. Type them before they hit the base. Every 3rd wave a <span className="text-rose">boss</span> shows only a definition: you must type the term.</p>
-      </div>
+    <div className="mx-auto max-w-3xl">
+      <BackLink onClick={() => go('practice')}>Practice</BackLink>
+      <PageHeader eyebrow="Typing defense" title="Defend your base" desc="Key terms from your thesis fall toward your base. Type each one before it lands. Every third wave shows only a definition, so you must recall the term." />
+
       {phase === 'over' && final && (
-        <div className="card pop p-6 text-center">
-          <div className="text-5xl">{final.score > best ? '🏆' : '💥'}</div>
-          <h2 className="mt-2 text-2xl font-bold">Score {final.score}</h2>
-          <p className="text-muted">Wave {final.wave} · {final.destroyed} destroyed · best combo x{final.maxCombo}{final.score > best ? ' · NEW BEST!' : ''}</p>
+        <section className="card fade-up mb-4 p-6">
+          <div className="flex items-center gap-4">
+            <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-brand-soft text-brand">{newBest ? <Trophy size={22} strokeWidth={1.75} /> : <Target size={22} strokeWidth={1.75} />}</span>
+            <div>
+              <h2 className="text-[20px] font-bold">Score {final.score}{newBest && <span className="ml-2 align-middle tag !border-brand-2/30 !bg-brand-soft !text-brand">New best</span>}</h2>
+              <p className="text-[13px] text-sub">Reached wave {final.wave} · {final.destroyed} terms cleared · longest streak {final.maxCombo}</p>
+            </div>
+          </div>
           {final.missed.length > 0 && (
-            <div className="mt-4 text-left">
-              <p className="mb-1 text-sm font-bold text-rose">Review these:</p>
-              {final.missed.map((t, i) => (
-                <p key={i} className="text-sm"><span className="font-bold text-sky">{t.term}</span> <span className="text-muted">— {t.definition}</span></p>
-              ))}
+            <div className="mt-4 border-t border-line pt-4">
+              <p className="mb-2 text-[13px] font-semibold">Review these terms</p>
+              <dl className="space-y-2">
+                {final.missed.map((t, i) => (
+                  <div key={i}><dt className="text-[13px] font-semibold">{t.term}</dt><dd className="text-[12px] text-sub">{t.definition}</dd></div>
+                ))}
+              </dl>
             </div>
           )}
-        </div>
+        </section>
       )}
-      <div className="card flex items-center justify-between p-4">
-        <div>
-          <div className="text-xs text-muted">Best score</div>
-          <div className="font-mono text-2xl font-bold text-gold">{best}</div>
+
+      <section className="card flex items-center justify-between gap-4 p-5">
+        <div className="flex gap-8">
+          <div><div className="text-[12px] text-sub">Best score</div><div className="text-[22px] font-bold">{Math.max(best, final?.score || 0)}</div></div>
+          <div><div className="text-[12px] text-sub">Sessions</div><div className="text-[22px] font-bold">{pack.typingSessions || 0}</div></div>
         </div>
-        <button className="btn-primary px-8 text-lg" onClick={() => setPhase('play')}>{phase === 'over' ? 'Play again' : '▶ Start'}</button>
-      </div>
-      <p className="text-center text-xs text-muted">Tip: on phone, turn your keyboard autocorrect off for this game.</p>
+        <button className="btn-primary h-11 px-6" onClick={() => setPhase('play')}>
+          {phase === 'over' ? <><RotateCcw size={16} /> Play again</> : <><Play size={16} /> Start</>}
+        </button>
+      </section>
+      <p className="mt-3 text-center text-[12px] text-sub">On a phone, turn off keyboard autocorrect for best results.</p>
     </div>
   )
 }
@@ -112,7 +134,7 @@ function Game({ pack, onEnd }) {
         st.wave++
         st.toSpawn = st.wave % 3 === 0 ? 1 : 5 + st.wave * 2
         st.spawnTimer = 1.5
-        st.intel = { text: st.wave % 3 === 0 ? `⚠ BOSS WAVE ${st.wave}: read the definition, type the term!` : `Wave ${st.wave}`, t: 2.5 }
+        st.intel = { text: st.wave % 3 === 0 ? `Definition wave ${st.wave}: read the definition and type the term.` : `Wave ${st.wave}`, t: 2.5 }
       }
       if (st.lives <= 0 && !st.over) {
         st.over = true
@@ -159,49 +181,52 @@ function Game({ pack, onEnd }) {
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between font-mono text-sm">
-        <span className="text-rose">{'♥'.repeat(Math.max(st.lives, 0))}<span className="text-line">{'♥'.repeat(LIVES - Math.max(st.lives, 0))}</span></span>
-        <span className="text-muted">WAVE {st.wave}</span>
-        <span>{st.combo >= 2 && <span className="mr-2 text-gold">x{st.combo}</span>}<span className="text-mint">{st.score}</span></span>
+      <div className="flex items-center justify-between text-[13px] font-semibold">
+        <span className="flex gap-1" aria-label={`${Math.max(st.lives, 0)} lives left`}>
+          {Array.from({ length: LIVES }, (_, i) => <Heart key={i} size={17} className={i < st.lives ? 'fill-red text-red' : 'text-track'} aria-hidden />)}
+        </span>
+        <span className="text-sub">Wave {st.wave}</span>
+        <span>{st.combo >= 2 && <span className="mr-3 text-[#8a6a00]">Streak {st.combo}</span>}<span className="text-brand">{st.score}</span></span>
       </div>
 
-      <div className="card relative h-[52vh] min-h-[300px] overflow-hidden !rounded-2xl" onClick={() => inputRef.current?.focus()}
-        style={{ backgroundImage: 'linear-gradient(var(--color-line) 1px, transparent 1px), linear-gradient(90deg, var(--color-line) 1px, transparent 1px)', backgroundSize: '32px 32px', backgroundPosition: 'center' }}>
+      <div className="card relative h-[50vh] min-h-[300px] overflow-hidden" onClick={() => inputRef.current?.focus()}
+        style={{ backgroundImage: 'linear-gradient(#eef2f4 1px, transparent 1px), linear-gradient(90deg, #eef2f4 1px, transparent 1px)', backgroundSize: '28px 28px' }}>
         {st.enemies.map((e) => {
           const isT = target === e
           const k = isT ? matchLen(e.text, typed) : 0
           return (
             <div key={e.id} className="absolute -translate-x-1/2 text-center" style={{ left: `${e.x}%`, top: `${e.y * 88}%` }}>
               {e.boss ? (
-                <div className={`w-64 max-w-[80vw] rounded-xl border-2 bg-ink/95 p-3 ${isT ? 'border-gold' : 'border-rose'}`}>
-                  <div className="text-xs font-bold text-rose">👾 BOSS</div>
-                  <div className="text-sm">{e.clue}</div>
-                  {isT && <div className="mt-1 font-mono text-gold">{e.text.slice(0, k)}<span className="text-muted">…</span></div>}
+                <div className={`w-64 max-w-[78vw] rounded-md border bg-white p-3 text-left shadow-sm ${isT ? 'border-brand' : 'border-red/50'}`}>
+                  <div className="eyebrow !text-red">Definition</div>
+                  <div className="mt-0.5 text-[13px] leading-snug">{e.clue}</div>
+                  {isT && <div className="mt-1 font-mono text-[13px] font-semibold text-brand">{e.text.slice(0, k)}</div>}
                 </div>
               ) : (
-                <div className={`whitespace-nowrap rounded-lg border px-2 py-1 font-mono text-sm shadow ${isT ? 'border-gold bg-ink' : 'border-line bg-panel2'}`}>
-                  <span className="text-gold">{e.text.slice(0, k)}</span>{e.text.slice(k)}
+                <div className={`whitespace-nowrap rounded-md border px-2 py-1 font-mono text-[13px] shadow-sm ${isT ? 'border-brand bg-white' : 'border-line bg-white'}`}>
+                  <span className="font-semibold text-brand">{e.text.slice(0, k)}</span>{e.text.slice(k)}
                 </div>
               )}
             </div>
           )
         })}
         {st.booms.map((b) => (
-          <div key={b.id} className="pointer-events-none absolute -translate-x-1/2 font-mono font-bold text-mint" style={{ left: `${b.x}%`, top: `${b.y * 88}%`, opacity: b.t / 0.6, transform: `translate(-50%, ${-(0.6 - b.t) * 60}px)` }}>
-            💥 +{b.pts}
+          <div key={b.id} className="pointer-events-none absolute font-mono text-[13px] font-bold text-brand" style={{ left: `${b.x}%`, top: `${b.y * 88}%`, opacity: b.t / 0.6, transform: `translate(-50%, ${-(0.6 - b.t) * 60}px)` }}>
+            +{b.pts}
           </div>
         ))}
-        <div className="absolute inset-x-0 bottom-0 h-2 bg-gradient-to-r from-mint/0 via-mint to-mint/0 opacity-70" />
+        <div className="absolute inset-x-0 bottom-0 h-1.5 bg-brand/80" />
       </div>
 
-      <div className={`h-12 overflow-hidden text-sm ${st.intel?.bad ? 'text-rose' : 'text-[#cfd4f5]'}`}>{st.intel?.text}</div>
+      <div className={`h-11 overflow-hidden text-[13px] leading-snug ${st.intel?.bad ? 'text-red' : 'text-sub'}`} aria-live="polite">{st.intel?.text}</div>
 
       <input
         ref={inputRef}
         value={typed}
         onChange={(e) => onType(e.target.value)}
-        className={`input font-mono text-lg ${error ? 'shake !border-rose' : ''}`}
-        placeholder="type here…"
+        className={`input !h-12 font-mono !text-[16px] ${error ? 'shake !border-red' : ''}`}
+        placeholder="Type a falling term"
+        aria-label="Type a falling term"
         autoCapitalize="off" autoCorrect="off" autoComplete="off" spellCheck="false"
       />
     </div>

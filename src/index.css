@@ -1,41 +1,54 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Space Grotesk", system-ui, sans-serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
-  --color-ink: #0b0d17;
-  --color-panel: #141829;
-  --color-panel2: #1c2138;
-  --color-line: #2a3152;
-  --color-mint: #7cf8c4;
-  --color-gold: #ffd166;
-  --color-rose: #ff6b8b;
-  --color-sky: #6cb8ff;
-  --color-muted: #8b93b8;
+
+  --color-brand: #075b3d;
+  --color-brand-2: #2e8061;
+  --color-brand-soft: #e7f3ec;
+  --color-bg: #f4f7f9;
+  --color-card: #ffffff;
+  --color-ink: #151b22;
+  --color-sub: #65717d;
+  --color-line: #e1e7eb;
+  --color-track: #e6ebef;
+  --color-blue: #1769aa;
+  --color-blue-soft: #e8f1f9;
+  --color-yellow: #f4c542;
+  --color-yellow-soft: #fdf6df;
+  --color-red: #d85c5c;
+  --color-red-soft: #fbecec;
 }
 
 html, body, #root { min-height: 100%; }
 body {
-  background: var(--color-ink);
-  background-image: radial-gradient(circle at 15% -10%, #1d2a55 0, transparent 45%), radial-gradient(circle at 110% 10%, #2b1640 0, transparent 40%);
-  background-attachment: fixed;
-  color: #e8ebff;
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
   -webkit-tap-highlight-color: transparent;
 }
 
-@utility card { @apply bg-panel/90 border border-line rounded-2xl; }
-@utility btn { @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 font-medium transition active:scale-95 disabled:opacity-40 disabled:pointer-events-none; }
-@utility btn-primary { @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 font-medium transition active:scale-95 disabled:opacity-40 disabled:pointer-events-none bg-mint text-ink hover:brightness-110; }
-@utility btn-ghost { @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 font-medium transition active:scale-95 disabled:opacity-40 disabled:pointer-events-none border border-line text-[#e8ebff] hover:bg-panel2; }
-@utility input { @apply w-full rounded-xl bg-ink border border-line px-3 py-2.5 outline-none focus:border-mint; }
-@utility chip { @apply inline-block rounded-full border border-line px-2.5 py-0.5 text-xs text-muted; }
+:focus-visible { outline: 2px solid var(--color-brand-2); outline-offset: 2px; border-radius: 6px; }
 
-@keyframes pop { 0% { transform: scale(.6); opacity: 0 } 60% { transform: scale(1.15) } 100% { transform: scale(1); opacity: 1 } }
-.pop { animation: pop .35s ease-out; }
-@keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
-.shake { animation: shake .25s linear 2; }
+@utility card { @apply bg-card border border-line rounded-lg; }
+@utility card-link { @apply bg-card border border-line rounded-lg transition-colors hover:border-brand-2/50 hover:bg-[#fbfdfc] cursor-pointer; }
+@utility btn { @apply inline-flex items-center justify-center gap-2 rounded-md px-4 h-10 text-[13px] font-semibold transition-colors disabled:opacity-40 disabled:pointer-events-none select-none; }
+@utility btn-primary { @apply inline-flex items-center justify-center gap-2 rounded-md px-4 h-10 text-[13px] font-semibold transition-colors disabled:opacity-40 disabled:pointer-events-none select-none bg-brand text-white hover:bg-[#064d34]; }
+@utility btn-outline { @apply inline-flex items-center justify-center gap-2 rounded-md px-4 h-10 text-[13px] font-semibold transition-colors disabled:opacity-40 disabled:pointer-events-none select-none bg-white border border-brand text-brand hover:bg-brand-soft; }
+@utility btn-ghost { @apply inline-flex items-center justify-center gap-2 rounded-md px-4 h-10 text-[13px] font-semibold transition-colors disabled:opacity-40 disabled:pointer-events-none select-none bg-white border border-line text-ink hover:bg-bg; }
+@utility input { @apply w-full rounded-md bg-white border border-line px-3 h-10 text-[14px] outline-none focus:border-brand-2 focus:ring-2 focus:ring-brand-soft; }
+@utility eyebrow { @apply text-[11px] font-semibold uppercase tracking-[0.08em] text-sub; }
+@utility tag { @apply inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] font-medium bg-bg text-sub border border-line; }
+
+@keyframes fadeUp { from { opacity: 0; transform: translateY(4px) } to { opacity: 1; transform: none } }
+.fade-up { animation: fadeUp .2s ease-out; }
+@keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-5px)} 75%{transform:translateX(5px)} }
+.shake { animation: shake .2s linear 2; }
 .flip { perspective: 1200px; }
-.flip-inner { transition: transform .5s; transform-style: preserve-3d; }
+.flip-inner { transition: transform .45s; transform-style: preserve-3d; }
 .flipped .flip-inner { transform: rotateY(180deg); }
 .face { backface-visibility: hidden; }
 .back { transform: rotateY(180deg); }
+.pb-safe { padding-bottom: env(safe-area-inset-bottom); }
