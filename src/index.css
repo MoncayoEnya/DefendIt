@@ -1,0 +1,41 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Space Grotesk", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --color-ink: #0b0d17;
+  --color-panel: #141829;
+  --color-panel2: #1c2138;
+  --color-line: #2a3152;
+  --color-mint: #7cf8c4;
+  --color-gold: #ffd166;
+  --color-rose: #ff6b8b;
+  --color-sky: #6cb8ff;
+  --color-muted: #8b93b8;
+}
+
+html, body, #root { min-height: 100%; }
+body {
+  background: var(--color-ink);
+  background-image: radial-gradient(circle at 15% -10%, #1d2a55 0, transparent 45%), radial-gradient(circle at 110% 10%, #2b1640 0, transparent 40%);
+  background-attachment: fixed;
+  color: #e8ebff;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@utility card { @apply bg-panel/90 border border-line rounded-2xl; }
+@utility btn { @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 font-medium transition active:scale-95 disabled:opacity-40 disabled:pointer-events-none; }
+@utility btn-primary { @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 font-medium transition active:scale-95 disabled:opacity-40 disabled:pointer-events-none bg-mint text-ink hover:brightness-110; }
+@utility btn-ghost { @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 font-medium transition active:scale-95 disabled:opacity-40 disabled:pointer-events-none border border-line text-[#e8ebff] hover:bg-panel2; }
+@utility input { @apply w-full rounded-xl bg-ink border border-line px-3 py-2.5 outline-none focus:border-mint; }
+@utility chip { @apply inline-block rounded-full border border-line px-2.5 py-0.5 text-xs text-muted; }
+
+@keyframes pop { 0% { transform: scale(.6); opacity: 0 } 60% { transform: scale(1.15) } 100% { transform: scale(1); opacity: 1 } }
+.pop { animation: pop .35s ease-out; }
+@keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
+.shake { animation: shake .25s linear 2; }
+.flip { perspective: 1200px; }
+.flip-inner { transition: transform .5s; transform-style: preserve-3d; }
+.flipped .flip-inner { transform: rotateY(180deg); }
+.face { backface-visibility: hidden; }
+.back { transform: rotateY(180deg); }

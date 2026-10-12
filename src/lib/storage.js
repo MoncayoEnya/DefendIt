@@ -1,0 +1,57 @@
+// Everything is saved in the browser (free, no account needed).
+const KEY = 'defendit:v1'
+
+const defaults = {
+  settings: { apiKey: '', model: 'gemini-2.5-flash' },
+  profile: { xp: 0, streak: 0, lastDay: '', best: {}, fillerHistory: [] },
+  packs: [], // study packs made from uploaded files
+  activeId: null,
+  mastery: {}, // { [packId]: { [itemKey]: { box: 0-5, due: timestamp } } }
+}
+
+export function load() {
+  try {
+    const raw = localStorage.getItem(KEY)
+    return raw ? { ...defaults, ...JSON.parse(raw) } : structuredClone(defaults)
+  } catch {
+    return structuredClone(defaults)
+  }
+}
+
+export function save(state) {
+  try {
+    localStorage.setItem(KEY, JSON.stringify(state))
+  } catch {
+    /* storage full or blocked – app still works for this session */
+  }
+}
+
+export const LEVELS = [
+  { xp: 0, name: 'Freshman' },
+  { xp: 150, name: 'Researcher' },
+  { xp: 400, name: 'Data Wrangler' },
+  { xp: 800, name: 'Defender' },
+  { xp: 1500, name: 'Panel Slayer' },
+  { xp: 2500, name: 'Thesis Legend' },
+]
+
+export function levelInfo(xp) {
+  let i = 0
+  while (i + 1 < LEVELS.length && xp >= LEVELS[i + 1].xp) i++
+  const cur = LEVELS[i]
+  const next = LEVELS[i + 1]
+  const pct = next ? (xp - cur.xp) / (next.xp - cur.xp) : 1
+  return { level: i + 1, name: cur.name, next, pct }
+}
+
+export function today() {
+  return new Date().toISOString().slice(0, 10)
+}
+
+// Spaced repetition (Leitner boxes): wrong answers come back sooner.
+const GAPS = [0, 1, 3, 7, 14, 30].map((d) => d * 86400000)
+export function review(mastery, key, correct) {
+  const cur = mastery[key] || { box: 0, due: 0 }
+  const box = correct ? Math.min(cur.box + 1, 5) : 0
+  return { ...mastery, [key]: { box, due: Date.now() + GAPS[box] } }
+}
