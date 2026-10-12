@@ -1,0 +1,8 @@
+{
+  "appId": "com.defendit.app",
+  "appName": "DefendIt",
+  "webDir": "dist",
+  "android": {
+    "backgroundColor": "#F4F7F9"
+  }
+}

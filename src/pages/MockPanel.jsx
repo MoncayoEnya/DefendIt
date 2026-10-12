@@ -3,9 +3,11 @@ import { Calculator, Check, Clock, Flame, GraduationCap, Info, Loader2, MessageS
 import { BackLink, Checkbox, Notice, PageHeader, ProgressBar } from '../components/ui.jsx'
 import { gradeAnswer } from '../lib/ai.js'
 import { shuffle } from '../lib/match.js'
-import { review } from '../lib/storage.js'
+import { bumpStat, review } from '../lib/storage.js'
 import { canListen, countFillers, startListening } from '../lib/voice.js'
 import { speak } from './Guide.jsx'
+import { uiState } from '../lib/chapters.js'
+import { getGroup } from '../lib/group.js'
 
 const PANEL = [
   { name: 'Dr. Numbers', title: 'Statistics and validity', icon: Calculator, tone: 'bg-blue-soft text-blue', style: 'precise and skeptical, focuses on sample size, statistics, validity and whether numbers support claims' },
@@ -20,9 +22,26 @@ export default function MockPanel({ state, pack, update, addXP, go }) {
   const [pressure, setPressure] = useState(false)
   const [game, setGame] = useState(null)
   const hasKey = !!state.settings.apiKey
+  const group = getGroup(pack)
+  const groupAvailable = group.members.length >= 2
+  const [groupMode, setGroupMode] = useState(() => {
+    const g = uiState.groupMode
+    uiState.groupMode = false
+    return !!g && groupAvailable
+  })
 
   function start() {
-    setGame({ idx: 0, panelHp: PANELIST_HP, hp: PLAYER_HP, queue: shuffle(pack.questions), qIdx: 0, scores: [], followUp: null })
+    // the queue holds question numbers (not objects), so it stays valid after every save
+    const all = pack.questions.map((_, i) => i)
+    let queue = shuffle(all)
+    if (groupMode) {
+      // take turns: one question per member in rotation
+      const lists = group.members.map((m) => shuffle(all.filter((i) => group.assign[i] === m.id)))
+      queue = []
+      for (let r = 0; lists.some((l) => l[r] !== undefined); r++) for (const l of lists) if (l[r] !== undefined) queue.push(l[r])
+      if (!queue.length) queue = shuffle(all)
+    }
+    setGame({ idx: 0, panelHp: PANELIST_HP, hp: PLAYER_HP, queue, qIdx: 0, scores: [], followUp: null, memberScores: {}, lastMember: null })
     setPhase('battle')
   }
 
@@ -32,6 +51,9 @@ export default function MockPanel({ state, pack, update, addXP, go }) {
       const p = s.packs.find((x) => x.id === pack.id)
       p.panelBest = Math.max(p.panelBest || 0, Math.round(avg * 10) / 10)
       p.panelSessions = (p.panelSessions || 0) + 1
+      if (won) s = bumpStat(s, 'panelWins')
+      if (won && pressure) s = bumpStat(s, 'pressureWins')
+      if (groupMode) s = bumpStat(s, 'groupSessions')
       return s
     })
     addXP(Math.round(avg * 8) + (won ? 60 : 10), won ? 'Defense passed' : 'Panel practice')
@@ -56,8 +78,13 @@ export default function MockPanel({ state, pack, update, addXP, go }) {
           ))}
         </div>
 
-        <div className="card mt-3 p-4">
+        <div className="card mt-3 divide-y divide-line px-4 py-1">
           <Checkbox checked={pressure} onChange={setPressure} label="Pressure mode" sub="45 seconds per answer instead of 90, and tougher follow-up questions." />
+          {groupAvailable ? (
+            <Checkbox checked={groupMode} onChange={setGroupMode} label="Group mode" sub={`Questions rotate between ${group.members.map((m) => m.name).join(', ')} based on your split.`} />
+          ) : (
+            <div className="py-2.5 text-[13px] text-sub">Practicing as a group? <button className="font-semibold text-brand" onClick={() => go('group')}>Set up group mode</button></div>
+          )}
         </div>
 
         <div className="mt-3 space-y-3">
@@ -83,6 +110,14 @@ export default function MockPanel({ state, pack, update, addXP, go }) {
           </span>
           <h2 className="mt-3 text-[22px] font-bold">{won ? 'You defended successfully' : 'The panel won this round'}</h2>
           <p className="mt-1 text-[13px] text-sub">Average score <span className="font-semibold text-ink">{game.avg.toFixed(1)} / 10</span> across {game.scores.length} questions</p>
+          {groupMode && Object.keys(game.memberScores || {}).length > 0 && (
+            <ul className="mx-auto mt-4 max-w-xs divide-y divide-line rounded-md border border-line text-left">
+              {group.members.filter((m) => game.memberScores[m.id]).map((m) => {
+                const sc = game.memberScores[m.id]
+                return <li key={m.id} className="flex justify-between px-3 py-2 text-[13px]"><span>{m.name}</span><span className="font-semibold">{(sc.reduce((a, b) => a + b, 0) / sc.length).toFixed(1)} / 10 · {sc.length} q</span></li>
+              })}
+            </ul>
+          )}
           <p className="mt-3 text-[13px]">{won ? 'Try Pressure mode next so the real defense feels easier.' : 'Review the stronger answers and the study guide, then try again.'}</p>
           <div className="mt-5 flex justify-center gap-2">
             <button className="btn-primary" onClick={() => setPhase('intro')}>Practice again</button>
@@ -95,14 +130,17 @@ export default function MockPanel({ state, pack, update, addXP, go }) {
 
   return (
     <div className="mx-auto max-w-3xl">
-      <Battle game={game} setGame={setGame} pack={pack} state={state} update={update} pressure={pressure} hasKey={hasKey} onEnd={endBattle} />
+      <Battle game={game} setGame={setGame} group={groupMode ? group : null} pack={pack} state={state} update={update} pressure={pressure} hasKey={hasKey} onEnd={endBattle} />
     </div>
   )
 }
 
-function Battle({ game, setGame, pack, state, update, pressure, hasKey, onEnd }) {
+function Battle({ game, setGame, group, pack, state, update, pressure, hasKey, onEnd }) {
   const member = PANEL[game.idx]
-  const q = game.followUp || game.queue[game.qIdx % game.queue.length]
+  const currentIndex = game.followUp ? -1 : game.queue[game.qIdx % game.queue.length]
+  const q = game.followUp || pack.questions[currentIndex]
+  const answererId = group ? (game.followUp ? game.lastMember : group.assign[currentIndex]) : null
+  const answerer = group?.members.find((m) => m.id === answererId)
   const limit = pressure ? 45 : 90
   const [answer, setAnswer] = useState('')
   const [time, setTime] = useState(limit)
@@ -139,6 +177,7 @@ function Battle({ game, setGame, pack, state, update, pressure, hasKey, onEnd })
     setErr('')
     const fillers = countFillers(answer)
     const words = answer.trim().split(/\s+/).filter(Boolean).length
+    if (words >= 20 && fillers.total === 0) update((s) => bumpStat(s, 'cleanAnswers'))
     if (hasKey) {
       setGrading(true)
       try {
@@ -165,8 +204,19 @@ function Battle({ game, setGame, pack, state, update, pressure, hasKey, onEnd })
 
   function nextQuestion() {
     const score = finalScore()
-    const qi = pack.questions.indexOf(q)
+    const qi = currentIndex
     if (qi >= 0) update((s) => ({ ...s, mastery: { ...s.mastery, [pack.id]: review(s.mastery[pack.id] || {}, `q${qi}`, score >= 7) } }))
+    if (answererId) {
+      update((s) => {
+        const p = s.packs.find((x) => x.id === pack.id)
+        const gr = getGroup(p)
+        const st = gr.stats[answererId] || { answered: 0, total: 0, practiced: [] }
+        gr.stats[answererId] = { answered: st.answered + 1, total: st.total + score, practiced: qi >= 0 ? [...new Set([...(st.practiced || []), qi])] : st.practiced || [] }
+        p.group = gr
+        return s
+      })
+    }
+    const memberScores = answererId ? { ...game.memberScores, [answererId]: [...(game.memberScores?.[answererId] || []), score] } : game.memberScores
 
     const dmg = score * 10 + (score >= 9 ? 15 : 0)
     const hurt = score < 6 ? (6 - score) * 9 : 0
@@ -179,15 +229,15 @@ function Battle({ game, setGame, pack, state, update, pressure, hasKey, onEnd })
     hp -= hurt
     qIdx = game.followUp ? qIdx : qIdx + 1
     let followUp = null
-    if (hp <= 0) return onEnd(false, scores)
+    if (hp <= 0) { setGame((g) => ({ ...g, memberScores })); return onEnd(false, scores) }
     if (panelHp <= 0) {
       idx++
       panelHp = PANELIST_HP
-      if (idx >= PANEL.length) return onEnd(true, scores)
+      if (idx >= PANEL.length) { setGame((g) => ({ ...g, memberScores })); return onEnd(true, scores) }
     } else if (result.followUp && (pressure || score >= 5) && !game.followUp) {
       followUp = { question: result.followUp, type: 'Follow-up', idealPoints: [] }
     }
-    setGame({ ...game, idx, panelHp, hp, qIdx, scores, followUp })
+    setGame({ ...game, idx, panelHp, hp, qIdx, scores, followUp, memberScores, lastMember: answererId })
     setAnswer('')
     setResult(null)
     setChecks({})
@@ -227,6 +277,11 @@ function Battle({ game, setGame, pack, state, update, pressure, hasKey, onEnd })
       </section>
 
       <section className="card p-5">
+        {answerer && (
+          <div className="mb-3 flex items-center gap-2 rounded-md bg-blue-soft px-3 py-2 text-[13px] text-blue">
+            <span className="font-semibold">{answerer.name}</span> answers this one{game.followUp ? ' (follow-up)' : ''}
+          </div>
+        )}
         <div className="mb-2 flex items-center justify-between">
           <span className="tag">{q.type}</span>
           <button className="inline-flex h-8 items-center gap-1.5 rounded-md px-2 text-[12px] font-medium text-sub hover:bg-bg hover:text-ink" onClick={() => speak(q.question)}><Volume2 size={15} /> Listen</button>

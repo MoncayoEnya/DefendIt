@@ -109,7 +109,11 @@ export function buildOfflinePack(text, fileName) {
   for (const p of topPhrases(text)) {
     const re = new RegExp(`\\b${p.replace(/[-]/g, '\\-')}\\b`, 'i')
     const def = sentences.find((s) => re.test(s) && /\b(is|are|refers to|means|defined as|was|were)\b/i.test(s)) || sentences.find((s) => re.test(s))
-    if (def) terms.push({ term: cap(p), definition: def })
+    if (def) {
+      // the chapter where this term appears most often
+      const counts = sections.map((sec) => (sec.text.match(new RegExp(re.source, 'gi')) || []).length)
+      terms.push({ term: cap(p), definition: def, chapter: counts.indexOf(Math.max(...counts)) })
+    }
     if (terms.length >= 16) break
   }
 

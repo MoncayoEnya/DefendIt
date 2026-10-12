@@ -18,7 +18,7 @@ export default function Overview({ state, update, pack, go, uploader }) {
       {/* Mobile layout */}
       <div className="space-y-4 md:hidden">
         <WelcomeSection name={name} mobile />
-        <ReadinessCard state={state} pack={pack} mobile />
+        <ReadinessCard state={state} pack={pack} mobile go={go} />
         <ThesisUploadCard uploader={uploader} hasPacks={hasOwn} hasDemo={hasDemo} mobile />
         <div>
           <h2 className="mb-2.5 text-[15px] font-semibold">Your next session</h2>
@@ -50,7 +50,7 @@ export default function Overview({ state, update, pack, go, uploader }) {
             )}
           </div>
           <div className="min-w-0">
-            <ReadinessCard state={state} pack={pack}>
+            <ReadinessCard state={state} pack={pack} go={go}>
               <FocusChecklist state={state} update={update} go={go} />
             </ReadinessCard>
           </div>

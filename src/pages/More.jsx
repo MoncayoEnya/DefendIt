@@ -1,9 +1,9 @@
-import { HeartPulse, Keyboard, Settings as SettingsIcon, Swords } from 'lucide-react'
+import { Award, Cloud, CloudOff, HeartPulse, Keyboard, Link2, ListOrdered, Settings as SettingsIcon, Swords, UsersRound } from 'lucide-react'
 import { FocusChecklist, ThesisDocumentCard, ThesisUploadCard } from '../components/Dashboard.jsx'
 import { ListLink, PageHeader, SectionTitle } from '../components/ui.jsx'
 import { levelInfo } from '../lib/storage.js'
 
-export default function More({ state, update, go, uploader }) {
+export default function More({ state, update, go, uploader, cloud }) {
   const lv = levelInfo(state.profile.xp)
 
   function remove(p) {
@@ -39,6 +39,11 @@ export default function More({ state, update, go, uploader }) {
       <div className="space-y-2">
         <ListLink icon={HeartPulse} tone="yellow" title="Confidence lab" meta="Breathing, speaking drill, helpful lines, checklist" onClick={() => go('confidence')} />
         <ListLink icon={Keyboard} tone="blue" title="Typing defense" meta="Recall key terms under time pressure" onClick={() => go('typing')} />
+        <ListLink icon={Link2} tone="brand" title="Match & Link" meta="Drag terms to chapters or definitions" onClick={() => go('match')} />
+        <ListLink icon={UsersRound} tone="blue" title="Group mode" meta="Split questions among groupmates" onClick={() => go('group')} />
+        <ListLink icon={Award} tone="yellow" title="Badges" meta={`${Object.keys(state.profile.badges || {}).length} earned`} onClick={() => go('badges')} />
+        <ListLink icon={ListOrdered} tone="blue" title="Class leaderboard" meta={state.profile.classCode ? `Class ${state.profile.classCode}` : 'Compete with classmates'} onClick={() => go('leaderboard')} />
+        <ListLink icon={cloud?.user ? Cloud : CloudOff} tone="brand" title="Account and cloud saving" meta={cloud?.user ? cloud.user.email : 'Sign in to back up your progress'} onClick={() => go('account')} />
         <ListLink icon={Swords} tone="brand" title="All practice modes" meta="Flashcards, typing defense and the panel" onClick={() => go('practice')} />
         <ListLink icon={SettingsIcon} title="Settings" meta={state.settings.apiKey ? 'AI mode is on' : 'Add a free AI key for smarter results'} onClick={() => go('settings')} />
       </div>

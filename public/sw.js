@@ -1,5 +1,5 @@
 // Simple offline cache: app works without internet after first visit (AI features still need internet).
-const CACHE = 'defendit-v1'
+const CACHE = 'defendit-v2'
 self.addEventListener('install', (e) => { self.skipWaiting() })
 self.addEventListener('activate', (e) => { e.waitUntil(self.clients.claim()) })
 self.addEventListener('fetch', (e) => {

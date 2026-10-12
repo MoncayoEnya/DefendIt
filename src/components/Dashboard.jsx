@@ -2,6 +2,7 @@ import { AlertCircle, BookOpen, ChevronRight, FileText, FileUp, Keyboard, Layers
 import { CircularProgress, Checkbox, MetricRow, Notice } from './ui.jsx'
 import { FOCUS_TASKS, focusDone, packProgress, readiness } from '../lib/progress.js'
 import { today } from '../lib/storage.js'
+import { uiState, weakestChapter } from '../lib/chapters.js'
 
 export function WelcomeSection({ name, mobile }) {
   const date = new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }).toUpperCase()
@@ -91,8 +92,9 @@ export function SessionCard({ s, go, mobile }) {
   )
 }
 
-export function ReadinessCard({ state, pack, mobile, children }) {
+export function ReadinessCard({ state, pack, mobile, children, go }) {
   const r = readiness(state, pack)
+  const weak = pack ? weakestChapter(state, pack) : null
   const rows = [
     { label: 'Knowledge', value: r.knowledge, color: 'bg-brand-2' },
     { label: 'Practice', value: r.practice, color: 'bg-blue' },
@@ -106,6 +108,7 @@ export function ReadinessCard({ state, pack, mobile, children }) {
           <CircularProgress value={r.overall} size={96} stroke={10} label={`Defense readiness ${r.overall}%`} />
           <div className="flex-1 space-y-2.5">{rows.map((x) => <MetricRow key={x.label} {...x} compact />)}</div>
         </div>
+        {weak && go && <WeakChapter weak={weak} go={go} />}
       </section>
     )
   }
@@ -117,8 +120,23 @@ export function ReadinessCard({ state, pack, mobile, children }) {
       </div>
       <div className="space-y-3.5">{rows.map((x) => <MetricRow key={x.label} {...x} />)}</div>
       {!pack && <p className="mt-4 text-[12px] text-sub">Upload a thesis to start building your score.</p>}
+      {weak && go && <WeakChapter weak={weak} go={go} />}
       {children && <div className="mt-5 border-t border-line pt-4">{children}</div>}
     </section>
+  )
+}
+
+function WeakChapter({ weak, go }) {
+  return (
+    <button onClick={() => { uiState.openChapter = weak.index; go('guide') }}
+      className="mt-4 flex w-full items-center gap-3 rounded-md border border-line bg-bg px-3 py-2.5 text-left hover:border-brand-2/40">
+      <span className="min-w-0 flex-1">
+        <span className="block text-[11px] font-medium uppercase tracking-wide text-sub">Weakest chapter</span>
+        <span className="block truncate text-[13px] font-semibold">{weak.title}</span>
+      </span>
+      <span className="text-[13px] font-semibold text-red">{weak.score}%</span>
+      <ChevronRight size={16} className="text-sub" aria-hidden />
+    </button>
   )
 }
 

@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
-import { BookOpen, Check, ChevronDown, House, Layers, LogOut, MoreHorizontal, Pencil, Settings, ShieldCheck, Trophy, Users } from 'lucide-react'
+import { Award, BookOpen, Check, ChevronDown, Cloud, CloudOff, House, Layers, ListOrdered, LogOut, MoreHorizontal, Pencil, Settings, ShieldCheck, Trophy, Users } from 'lucide-react'
 import { levelInfo } from '../lib/storage.js'
 
 const DESKTOP_NAV = [
   { id: 'overview', label: 'Overview', match: ['overview'] },
   { id: 'guide', label: 'Study guide', match: ['guide'] },
-  { id: 'practice', label: 'Practice', match: ['practice', 'cards', 'typing', 'panel'] },
+  { id: 'practice', label: 'Practice', match: ['practice', 'cards', 'typing', 'panel', 'match', 'group', 'leaderboard'] },
   { id: 'confidence', label: 'Confidence', match: ['confidence'] },
 ]
 
@@ -14,7 +14,7 @@ const MOBILE_NAV = [
   { id: 'guide', label: 'Guide', icon: BookOpen, match: ['guide'] },
   { id: 'cards', label: 'Cards', icon: Layers, match: ['cards'] },
   { id: 'panel', label: 'Panel', icon: Users, match: ['panel'] },
-  { id: 'more', label: 'More', icon: MoreHorizontal, match: ['more', 'confidence', 'settings', 'practice', 'typing'] },
+  { id: 'more', label: 'More', icon: MoreHorizontal, match: ['more', 'confidence', 'settings', 'practice', 'typing', 'match', 'group', 'badges', 'account', 'leaderboard'] },
 ]
 
 function Brand({ onClick }) {
@@ -35,7 +35,7 @@ export function Avatar({ name, size = 32 }) {
   )
 }
 
-function ProfileMenu({ state, update, go, compact }) {
+function ProfileMenu({ state, update, go, compact, cloud }) {
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState(false)
   const [name, setName] = useState(state.profile.name || '')
@@ -89,6 +89,9 @@ function ProfileMenu({ state, update, go, compact }) {
           </div>
           <div className="border-t border-line pt-1">
             <MenuItem icon={Pencil} onClick={() => setEditing(true)}>Change name</MenuItem>
+            <MenuItem icon={Award} onClick={() => { go('badges'); setOpen(false) }}>Badges · {Object.keys(state.profile.badges || {}).length} earned</MenuItem>
+            <MenuItem icon={ListOrdered} onClick={() => { go('leaderboard'); setOpen(false) }}>Class leaderboard</MenuItem>
+            <MenuItem icon={cloud?.user ? Cloud : CloudOff} onClick={() => { go('account'); setOpen(false) }}>{cloud?.user ? `Account · ${cloud.user.email}` : 'Sign in to back up progress'}</MenuItem>
             <MenuItem icon={Trophy} onClick={() => { go('settings'); setOpen(false) }}>Levels and streak · {state.profile.streak} day{state.profile.streak === 1 ? '' : 's'}</MenuItem>
             <MenuItem icon={Settings} onClick={() => { go('settings'); setOpen(false) }}>Settings and AI key</MenuItem>
             <MenuItem icon={LogOut} danger onClick={() => confirm('Delete all progress, files and settings on this device?') && (localStorage.clear(), location.reload())}>Reset all data</MenuItem>
@@ -107,7 +110,7 @@ function MenuItem({ icon: Icon, children, onClick, danger }) {
   )
 }
 
-export function DesktopHeader({ tab, go, state, update }) {
+export function DesktopHeader({ tab, go, state, update, cloud }) {
   return (
     <header className="sticky top-0 z-40 hidden border-b border-line bg-white md:block">
       <div className="mx-auto flex h-16 max-w-[1240px] items-center px-6 lg:px-8">
@@ -131,19 +134,19 @@ export function DesktopHeader({ tab, go, state, update }) {
         <div className="flex flex-1 items-center justify-end gap-4">
           <span className="text-[13px] font-semibold">{state.profile.xp} XP</span>
           <span className="h-6 w-px bg-line" />
-          <ProfileMenu state={state} update={update} go={go} />
+          <ProfileMenu state={state} update={update} go={go} cloud={cloud} />
         </div>
       </div>
     </header>
   )
 }
 
-export function MobileHeader({ go, state, update }) {
+export function MobileHeader({ go, state, update, cloud }) {
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-white md:hidden">
       <div className="flex h-14 items-center justify-between px-4">
         <Brand onClick={() => go('overview')} />
-        <ProfileMenu state={state} update={update} go={go} compact />
+        <ProfileMenu state={state} update={update} go={go} compact cloud={cloud} />
       </div>
     </header>
   )
@@ -168,11 +171,11 @@ export function BottomNavigation({ tab, go }) {
   )
 }
 
-export function Toast({ toast }) {
+export function Toast({ toast, go }) {
   if (!toast) return null
   return (
-    <div role="status" className="fade-up fixed left-1/2 top-[72px] z-50 flex -translate-x-1/2 items-center gap-2 rounded-md border border-brand-2/30 bg-white px-4 py-2.5 text-[13px] font-semibold text-brand shadow-[0_8px_24px_rgba(21,27,34,.10)]">
-      {toast.big ? <Trophy size={16} aria-hidden /> : <Check size={16} aria-hidden />}
+    <div role="status" onClick={() => toast.to && go?.(toast.to)} className={`${toast.to ? 'cursor-pointer ' : ''}fade-up fixed left-1/2 top-[72px] z-50 flex max-w-[92vw] -translate-x-1/2 items-center gap-2 rounded-md border border-brand-2/30 bg-white px-4 py-2.5 text-[13px] font-semibold text-brand shadow-[0_8px_24px_rgba(21,27,34,.10)]`}>
+      {toast.to === 'badges' ? <Award size={16} aria-hidden /> : toast.big ? <Trophy size={16} aria-hidden /> : <Check size={16} aria-hidden />}
       {toast.text}
     </div>
   )

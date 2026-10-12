@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Lightbulb, MessageCircleQuestion, Mic, RefreshCw, Square, Wind } from 'lucide-react'
 import { Checkbox, IconBox, PageHeader, ProgressBar, SectionTitle } from '../components/ui.jsx'
 import { canListen, countFillers, startListening } from '../lib/voice.js'
+import { bumpStat } from '../lib/storage.js'
 
 const SCRIPTS = [
   { when: "You don't know the answer", say: "That's a very good point, and honestly it's outside the scope of our study. We'll note it as a recommendation for future research." },
@@ -58,7 +59,7 @@ export default function Confidence({ state, update, addXP }) {
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Breathing onDone={() => { bump('breaths'); addXP(10, 'Breathing exercise') }} />
-        <SpeakDrill onDone={(clean) => { bump('drills'); addXP(clean ? 20 : 12, 'Speaking drill') }} />
+        <SpeakDrill onDone={(clean, words) => { bump('drills'); if (clean && words >= 20) update((s) => bumpStat(s, 'cleanAnswers')); addXP(clean ? 20 : 12, 'Speaking drill') }} />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
@@ -187,7 +188,7 @@ function SpeakDrill({ onDone }) {
     const minutes = Math.max((Date.now() - startRef.current) / 60000, 1 / 60)
     const f = countFillers(text)
     setReport({ words, wpm: Math.round(words / minutes), fillers: f })
-    if (words > 5) onDone(f.total <= 1)
+    if (words > 5) onDone(f.total === 0, words)
   }
 
   return (

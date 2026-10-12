@@ -43,8 +43,8 @@ Read the paper below and return ONLY JSON with this exact shape:
   "overview": string,                    // 3-4 plain-English sentences: problem, method, main finding
   "elevatorPitch": string,               // a 45-second spoken opening the student can practice, first person
   "sections": [ { "title": string, "summary": string, "keyPoints": [string] } ],  // 4-8 sections following the paper's chapters, 2-4 key points each, simple words
-  "terms": [ { "term": string, "definition": string } ],   // 12-20 important terms/concepts/statistics FROM THIS PAPER, definitions max 25 words, as used in this paper
-  "questions": [ { "question": string, "type": string, "idealPoints": [string] } ], // 15-20 realistic, tough panel questions specific to THIS paper (methodology, sampling, validity, statistics, results, limitations, significance, novelty, "what if" questions). type = short category. idealPoints = 2-4 things a strong answer must mention, using facts from the paper.
+  "terms": [ { "term": string, "definition": string, "chapter": number } ],   // chapter = index in "sections" (0-based) where the term matters most. 12-20 important terms/concepts/statistics FROM THIS PAPER, definitions max 25 words, as used in this paper
+  "questions": [ { "question": string, "type": string, "idealPoints": [string], "chapter": number } ], // chapter = index in "sections" (0-based) the question is about. 15-20 realistic, tough panel questions specific to THIS paper (methodology, sampling, validity, statistics, results, limitations, significance, novelty, "what if" questions). type = short category. idealPoints = 2-4 things a strong answer must mention, using facts from the paper.
   "weakSpots": [string]                  // 3-6 parts of the paper a panel is likely to attack, and why
 }
 Use only information from the paper. Keep language simple and clear.

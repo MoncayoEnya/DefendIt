@@ -9,12 +9,17 @@ const defaults = {
   mastery: {}, // { [packId]: { [itemKey]: { box: 0-5, due: timestamp } } }
 }
 
+export function withDefaults(obj) {
+  const d = structuredClone(defaults)
+  if (!obj) return d
+  return { ...d, ...obj, settings: { ...d.settings, ...obj.settings }, profile: { ...d.profile, ...obj.profile } }
+}
+
 export function load() {
   try {
-    const raw = localStorage.getItem(KEY)
-    return raw ? { ...defaults, ...JSON.parse(raw) } : structuredClone(defaults)
+    return withDefaults(JSON.parse(localStorage.getItem(KEY)))
   } catch {
-    return structuredClone(defaults)
+    return withDefaults(null)
   }
 }
 
@@ -54,4 +59,11 @@ export function review(mastery, key, correct) {
   const cur = mastery[key] || { box: 0, due: 0 }
   const box = correct ? Math.min(cur.box + 1, 5) : 0
   return { ...mastery, [key]: { box, due: Date.now() + GAPS[box] } }
+}
+
+// Adds to a counter in profile.stats (returns a new state).
+export function bumpStat(s, key, n = 1) {
+  const st = { ...(s.profile.stats || {}) }
+  st[key] = (st[key] || 0) + n
+  return { ...s, profile: { ...s.profile, stats: st } }
 }

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { AlertTriangle, Check, ChevronDown, Mic, Volume2 } from 'lucide-react'
 import { PageHeader, ProgressBar, SectionTitle } from '../components/ui.jsx'
+import { chapterScores, uiState } from '../lib/chapters.js'
 
 export function speak(text) {
   if (!('speechSynthesis' in window)) return
@@ -10,8 +11,13 @@ export function speak(text) {
   speechSynthesis.speak(u)
 }
 
-export default function Guide({ pack, update, addXP, go }) {
-  const [open, setOpen] = useState(0)
+export default function Guide({ state, pack, update, addXP, go }) {
+  const [open, setOpen] = useState(() => {
+    const o = uiState.openChapter
+    uiState.openChapter = null
+    return o ?? 0
+  })
+  const scores = chapterScores(state, pack)
   const [showQ, setShowQ] = useState({})
   const read = pack.readSections || []
 
@@ -70,6 +76,10 @@ export default function Guide({ pack, update, addXP, go }) {
                         {done ? <Check size={13} strokeWidth={2.5} /> : i + 1}
                       </span>
                       <span className="flex-1 text-[14px] font-medium">{s.title}</span>
+                      <span className={`hidden w-20 items-center gap-2 sm:flex`} title={`Chapter readiness ${scores[i].score}%`}>
+                        <ProgressBar value={scores[i].score} color={scoreColor(scores[i].score)} className="h-1.5" />
+                      </span>
+                      <span className="w-9 text-right text-[12px] font-semibold text-sub">{scores[i].score}%</span>
                       <ChevronDown size={17} className={`text-sub transition-transform ${isOpen ? 'rotate-180' : ''}`} />
                     </button>
                     {isOpen && (
@@ -112,6 +122,20 @@ export default function Guide({ pack, update, addXP, go }) {
         </div>
 
         <aside className="min-w-0 space-y-4">
+          <section className="card p-5">
+            <h2 className="mb-1 text-[15px] font-semibold">Readiness by chapter</h2>
+            <p className="mb-3 text-[12px] text-sub">From reading, flashcards and panel answers in each chapter.</p>
+            <ul className="space-y-2.5">
+              {[...scores].sort((a, b) => a.score - b.score).map((c) => (
+                <li key={c.index}>
+                  <button className="w-full text-left" onClick={() => setOpen(c.index)}>
+                    <div className="mb-1 flex justify-between gap-2 text-[13px]"><span className="truncate">{c.title}</span><span className="font-semibold">{c.score}%</span></div>
+                    <ProgressBar value={c.score} color={scoreColor(c.score)} className="h-1.5" />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </section>
           {pack.weakSpots?.length > 0 && (
             <section className="card p-5">
               <h2 className="mb-2.5 flex items-center gap-2 text-[15px] font-semibold"><AlertTriangle size={17} strokeWidth={1.75} className="text-red" /> Where the panel may push</h2>
@@ -138,4 +162,8 @@ export default function Guide({ pack, update, addXP, go }) {
       </div>
     </div>
   )
+}
+
+function scoreColor(v) {
+  return v >= 70 ? 'bg-brand-2' : v >= 40 ? 'bg-yellow' : 'bg-red'
 }

@@ -147,7 +147,8 @@ function Game({ pack, onEnd }) {
     raf = requestAnimationFrame(loop)
     inputRef.current?.focus()
     return () => cancelAnimationFrame(raf)
-  }, [pack])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pack.id])
 
   function onType(v) {
     const st = g.current
