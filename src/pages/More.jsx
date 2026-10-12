@@ -1,9 +1,10 @@
-import { Award, Cloud, CloudOff, HeartPulse, Keyboard, Link2, ListOrdered, Settings as SettingsIcon, Swords, UsersRound } from 'lucide-react'
+import { Award, CalendarDays, MessageSquareText, Presentation, Timer, Cloud, CloudOff, HeartPulse, Keyboard, Link2, ListOrdered, Settings as SettingsIcon, Swords, UsersRound } from 'lucide-react'
 import { FocusChecklist, ThesisDocumentCard, ThesisUploadCard } from '../components/Dashboard.jsx'
 import { ListLink, PageHeader, SectionTitle } from '../components/ui.jsx'
 import { levelInfo } from '../lib/storage.js'
+import { hasAI } from '../lib/ai.js'
 
-export default function More({ state, update, go, uploader, cloud }) {
+export default function More({ state, update, go, uploader, cloud, pack }) {
   const lv = levelInfo(state.profile.xp)
 
   function remove(p) {
@@ -20,7 +21,7 @@ export default function More({ state, update, go, uploader, cloud }) {
     <div className="max-w-2xl">
       <PageHeader eyebrow="More" title="Everything else" desc={`Level ${lv.level} · ${lv.name} · ${state.profile.xp} XP · ${state.profile.streak}-day streak`} />
 
-      <div className="card p-4"><FocusChecklist state={state} update={update} go={go} /></div>
+      <div className="card p-4"><FocusChecklist state={state} update={update} go={go} pack={pack} /></div>
 
       <SectionTitle>Your thesis documents</SectionTitle>
       {state.packs.length ? (
@@ -37,6 +38,10 @@ export default function More({ state, update, go, uploader, cloud }) {
 
       <SectionTitle>Tools</SectionTitle>
       <div className="space-y-2">
+        <ListLink icon={CalendarDays} tone="brand" title="Defense countdown" meta="Your day-by-day prep plan" onClick={() => go('plan')} />
+        <ListLink icon={Timer} tone="yellow" title="Daily challenge" meta="5 minutes: terms and one panel question" onClick={() => go('daily')} />
+        <ListLink icon={MessageSquareText} tone="brand" title="Explain it simply" meta="Say your study in plain words" onClick={() => go('explain')} />
+        <ListLink icon={Presentation} tone="blue" title="Slide checker" meta="Check your PowerPoint before the defense" onClick={() => go('slides')} />
         <ListLink icon={HeartPulse} tone="yellow" title="Confidence lab" meta="Breathing, speaking drill, helpful lines, checklist" onClick={() => go('confidence')} />
         <ListLink icon={Keyboard} tone="blue" title="Typing defense" meta="Recall key terms under time pressure" onClick={() => go('typing')} />
         <ListLink icon={Link2} tone="brand" title="Match & Link" meta="Drag terms to chapters or definitions" onClick={() => go('match')} />
@@ -45,7 +50,7 @@ export default function More({ state, update, go, uploader, cloud }) {
         <ListLink icon={ListOrdered} tone="blue" title="Class leaderboard" meta={state.profile.classCode ? `Class ${state.profile.classCode}` : 'Compete with classmates'} onClick={() => go('leaderboard')} />
         <ListLink icon={cloud?.user ? Cloud : CloudOff} tone="brand" title="Account and cloud saving" meta={cloud?.user ? cloud.user.email : 'Sign in to back up your progress'} onClick={() => go('account')} />
         <ListLink icon={Swords} tone="brand" title="All practice modes" meta="Flashcards, typing defense and the panel" onClick={() => go('practice')} />
-        <ListLink icon={SettingsIcon} title="Settings" meta={state.settings.apiKey ? 'AI mode is on' : 'Add a free AI key for smarter results'} onClick={() => go('settings')} />
+        <ListLink icon={SettingsIcon} title="Settings" meta={hasAI(state) ? 'AI mode is on' : 'AI is off: offline mode'} onClick={() => go('settings')} />
       </div>
     </div>
   )

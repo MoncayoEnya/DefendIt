@@ -1,6 +1,8 @@
-import { AlertCircle, BookOpen, ChevronRight, FileText, FileUp, Keyboard, Layers, Loader2, Users } from 'lucide-react'
+import { AlertCircle, CalendarDays, BookOpen, ChevronRight, FileText, FileUp, Keyboard, Layers, Loader2, Users } from 'lucide-react'
 import { CircularProgress, Checkbox, MetricRow, Notice } from './ui.jsx'
-import { FOCUS_TASKS, focusDone, packProgress, readiness } from '../lib/progress.js'
+import { packProgress, readiness } from '../lib/progress.js'
+import { daysUntil, focusTasks, PHASES, todayPlan } from '../lib/plan.js'
+import { metricValue, taskDone } from '../lib/activity.js'
 import { today } from '../lib/storage.js'
 import { uiState, weakestChapter } from '../lib/chapters.js'
 
@@ -140,29 +142,38 @@ function WeakChapter({ weak, go }) {
   )
 }
 
-export function FocusChecklist({ state, update, go }) {
-  const done = focusDone(state)
+export function FocusChecklist({ state, update, go, pack }) {
+  const plan = todayPlan(state, pack)
+  const tasks = focusTasks(state, pack)
   function toggle(id, v) {
     update((s) => {
       const cur = s.profile.focus?.date === today() ? s.profile.focus.done || {} : {}
       return { ...s, profile: { ...s.profile, focus: { date: today(), done: { ...cur, [id]: v } } } }
     })
   }
-  const count = FOCUS_TASKS.filter((t) => done[t.id]).length
+  const count = tasks.filter((t) => taskDone(state, t)).length
   return (
     <div>
       <div className="mb-1 flex items-center justify-between">
         <h2 className="text-[15px] font-semibold">Today's focus</h2>
-        <span className="text-[12px] text-sub">{count}/{FOCUS_TASKS.length}</span>
+        <span className="text-[12px] text-sub">{count}/{tasks.length}</span>
       </div>
-      {FOCUS_TASKS.map((t) => (
-        <div key={t.id} className="flex items-center gap-1">
-          <div className="flex-1"><Checkbox checked={!!done[t.id]} onChange={(v) => toggle(t.id, v)} label={t.label} strike /></div>
-          <button onClick={() => go(t.to)} className="grid h-8 w-8 place-items-center rounded-md text-sub hover:bg-bg hover:text-ink" aria-label={`Open: ${t.label}`}>
-            <ChevronRight size={16} aria-hidden />
-          </button>
-        </div>
-      ))}
+      {plan && <p className="mb-1 text-[12px] text-sub">From your prep plan · {PHASES[plan.phase].name}</p>}
+      {tasks.map((t) => {
+        const done = taskDone(state, t)
+        const value = Math.min(metricValue(state, t), t.goal)
+        return (
+          <div key={t.id} className="flex items-center gap-1">
+            <div className="min-w-0 flex-1">
+              <Checkbox checked={done} onChange={(v) => toggle(t.id, v)} label={t.label} strike
+                sub={!done && t.goal > 1 ? `${value} of ${t.goal} done` : done && value >= t.goal ? 'Done automatically' : undefined} />
+            </div>
+            <button onClick={() => { if (t.chapter != null) uiState.openChapter = t.chapter; go(t.to) }} className="grid h-8 w-8 shrink-0 place-items-center rounded-md text-sub hover:bg-bg hover:text-ink" aria-label={`Open: ${t.label}`}>
+              <ChevronRight size={16} aria-hidden />
+            </button>
+          </div>
+        )
+      })}
     </div>
   )
 }
@@ -186,5 +197,37 @@ export function ThesisDocumentCard({ pack, active, onOpen, onDelete }) {
         <button onClick={onDelete} className="h-9 rounded-md px-2 text-[12px] font-medium text-sub hover:bg-red-soft hover:text-red" aria-label={`Delete ${pack.title}`}>Delete</button>
       )}
     </div>
+  )
+}
+
+export function CountdownCard({ state, pack, go, mobile }) {
+  if (!pack) return null
+  const n = daysUntil(pack.defenseDate)
+  const plan = todayPlan(state, pack)
+  const tasks = focusTasks(state, pack)
+  const done = tasks.filter((t) => taskDone(state, t)).length
+  if (n === null || n < 0) {
+    return (
+      <button onClick={() => go('plan')} className={`card-link flex w-full items-center gap-3 text-left ${mobile ? 'p-4' : 'p-5'}`}>
+        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-md bg-brand-soft text-brand"><CalendarDays size={20} strokeWidth={1.75} aria-hidden /></span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-[14px] font-semibold">When is your defense?</span>
+          <span className="block text-[12px] text-sub">Set the date and get a day-by-day prep plan.</span>
+        </span>
+        <ChevronRight size={18} className="shrink-0 text-sub" aria-hidden />
+      </button>
+    )
+  }
+  return (
+    <button onClick={() => go('plan')} className={`card-link flex w-full items-center gap-4 text-left ${mobile ? 'p-4' : 'p-5'}`}>
+      <span className="grid h-14 w-14 shrink-0 place-items-center rounded-lg bg-brand text-white">
+        <span className="text-center leading-none"><span className="block text-[20px] font-bold">{n}</span><span className="block text-[10px] font-medium uppercase tracking-wide opacity-80">{n === 1 ? 'day' : 'days'}</span></span>
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block text-[14px] font-semibold">{n === 0 ? 'Defense day. You are ready.' : 'Until your defense'}</span>
+        <span className="block text-[12px] text-sub">{plan ? `${PHASES[plan.phase].name} phase · ${done}/${tasks.length} tasks done today` : 'Open your prep plan'}</span>
+      </span>
+      <ChevronRight size={18} className="shrink-0 text-sub" aria-hidden />
+    </button>
   )
 }

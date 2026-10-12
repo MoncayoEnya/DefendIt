@@ -50,3 +50,27 @@ In Vercel: **Project** → **Settings** → **Environment Variables**, add
 - Everyone with the same code sees one leaderboard: XP, best panel score, best typing score and streak.
 - Only your display name and scores are shared, never your thesis.
 - Set your name first in the profile menu so classmates recognize you.
+
+## Sign in with Google (optional)
+The "Continue with Google" button works after these one-time steps:
+
+1. **Google Cloud Console** (https://console.cloud.google.com), free:
+   - Create a project (any name), then open **APIs & Services → OAuth consent screen**.
+     Choose **External**, fill in the app name (DefendIt), your email, and save.
+   - Open **APIs & Services → Credentials → Create credentials → OAuth client ID**.
+     Application type: **Web application**.
+   - Under **Authorized redirect URIs** add your Supabase callback URL. Find it in Supabase:
+     **Authentication → Sign In / Providers → Google** (it looks like
+     `https://YOUR-PROJECT.supabase.co/auth/v1/callback`).
+   - Click **Create** and copy the **Client ID** and **Client secret**.
+2. **Supabase**: **Authentication → Sign In / Providers → Google** → turn it on, paste the
+   Client ID and Client secret, and save.
+3. **Supabase**: **Authentication → URL Configuration**:
+   - **Site URL**: your live site (for example `https://defendit.vercel.app`)
+   - **Redirect URLs**: add `http://localhost:5173/**` (for testing) and `https://your-site/**`.
+
+Notes:
+- While the Google consent screen is in "Testing" mode, only the Google accounts you add as
+  test users can sign in. Click **Publish app** when you are ready for classmates.
+- Google sign-in works in the browser and the installed web app (PWABuilder route).
+  In the Capacitor Android app, use email sign-in, or add the deep-link setup from the Supabase docs.

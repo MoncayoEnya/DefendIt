@@ -11,15 +11,22 @@ Works on computer and phone (installable as an app). 100% free.
 - **Practice panel**: three AI panelists, voice or typed answers, filler-word counter, Pressure mode.
 - **Group mode**: split questions among groupmates by chapter, take turns on one device, track each member's practice.
 - **Confidence lab**: breathing, speaking drill, helpful lines, defense-day checklist.
-- **Badges** (16), XP levels, daily streak, readiness score from real activity.
-- **Accounts, cloud saving and class leaderboard** (optional, free Supabase): see `docs/CLOUD_SETUP.md`.
+- **Defense countdown**: set your defense date and get a day-by-day prep plan (Learn → Practice → Polish → Final prep).
+- **Smart Today's focus**: tasks tick themselves off when you actually do them (cards, chapters, panel answers…).
+- **Daily challenge**: 5 key terms + 1 panel question every day, bonus XP.
+- **Explain it simply**: explain your study in plain words; get a clarity score, jargon list and (with AI) a simpler version.
+- **Slide checker**: upload your PowerPoint (.pptx); finds wordy slides, missing titles and missing defense parts, optional AI review.
+- **Badges** (19), XP levels, daily streak, readiness score from real activity.
+- **Accounts (email or Google), cloud saving and class leaderboard** (optional, free Supabase): see `docs/CLOUD_SETUP.md`.
 - **Scanned PDFs and photos** are read with built-in OCR (no internet needed after install).
-- **Android app / Play Store**: see `docs/PLAY_STORE.md`.
+- **Android app / Play Store** with native voice answers: see `docs/PLAY_STORE.md`.
 
-## Two modes
-- **Offline mode** (default): no internet or key needed. Uses simple text analysis. Good, but basic.
-- **AI mode** (recommended, free): paste a free Google Gemini API key in ⚙︎ Settings.
-  Get one at https://aistudio.google.com/apikey. The key stays in your browser.
+## AI (Gemini + Groq, free)
+- **Built-in AI (recommended)**: put your free keys on the server (`GEMINI_API_KEY`, `GROQ_API_KEY`).
+  Every student gets AI automatically, with nothing to set up, and the keys stay secret. See `docs/DEPLOY.md`.
+  Groq (fast) handles short tasks; Gemini handles whole theses; each backs up the other.
+- **Personal key (optional)**: a student can paste their own Gemini key in Settings.
+- **Offline mode**: with no AI at all, everything still works with simpler text analysis.
 
 ## Run it on your computer
 Requires Node.js 20+ (free from https://nodejs.org).
@@ -30,15 +37,13 @@ npm run dev
 ```
 `npm install` also copies the OCR files into `public/ocr` automatically.
 
-Optional: copy `.env.example` to `.env` and add Supabase keys to turn on accounts and the leaderboard.
+Copy `.env.example` to `.env` and add your AI keys (and optionally Supabase keys). See `docs/DEPLOY.md`.
 Open the link it shows (e.g. http://localhost:5173).
 To test on your phone, connect to the same Wi-Fi and open the "Network" link it shows.
 
 ## Put it online for free
-1. Push this folder to a GitHub repository.
-2. Go to https://vercel.com (or Netlify / Cloudflare Pages), import the repo.
-3. Build command: `npm run build` · Output folder: `dist`.
-4. You get a free link. Open it on your phone → "Add to Home screen".
+Follow `docs/DEPLOY.md`: push to GitHub, import on Vercel, add your AI keys as environment variables, deploy.
+Open the link on your phone → "Add to Home screen".
 
 ## Project structure
 ```
@@ -57,11 +62,18 @@ src/
   lib/chapters.js            links terms/questions to chapters, per-chapter scores
   lib/badges.js              badge rules
   lib/group.js               group mode: splitting questions, member stats
-  lib/cloud.js               Supabase: sign-in, cloud saving, leaderboard
+  lib/cloud.js               Supabase: sign-in (email + Google), cloud saving, leaderboard
+  lib/activity.js            daily activity log (drives Today's focus and the plan)
+  lib/plan.js                defense countdown and day-by-day prep plan
+  lib/plain.js               offline plain-language checker
+  lib/slides.js              reads and checks PowerPoint files
   pages/                     Overview, Guide, Practice, Flashcards, MatchLink, TypingDefense, MockPanel, Group,
-                             Confidence, Badges, Account, Leaderboard, More, Settings
+                             Confidence, Badges, Account, Leaderboard, More, Settings,
+                             Plan, Daily, Explain, Slides
+api/ai.js                    server AI function (keeps the Gemini/Groq keys secret, rate limit, fallback)
+vercel.json                  lets the AI function run up to 60 seconds
 supabase/schema.sql          database tables and security rules
-docs/                        CLOUD_SETUP.md, PLAY_STORE.md
+docs/                        DEPLOY.md, CLOUD_SETUP.md, PLAY_STORE.md
 android/                     Capacitor Android project (icons and splash included)
 scripts/copy-ocr.mjs         copies OCR files into public/ocr after npm install
 ```
@@ -70,10 +82,8 @@ scripts/copy-ocr.mjs         copies OCR files into public/ocr after npm install
 Light, clean dashboard style. Colors live in `src/index.css` (`@theme`): primary green #075B3D, background #F4F7F9, blue for practice, yellow for confidence. Icons come from Lucide (`lucide-react`), no emojis.
 
 ## Ideas for next versions
-- Defense countdown with a day-by-day prep plan
-- Slide checker: upload your PowerPoint and get feedback
-- Sign in with Google
-- Voice answers inside the Capacitor Android app (native speech plugin)
+- Push notifications for the daily challenge and plan reminders
+- Export your study guide as a printable PDF reviewer
 
 ## Notes
 - Everything is saved in the browser (localStorage). Clearing browser data erases progress.

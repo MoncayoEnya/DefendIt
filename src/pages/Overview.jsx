@@ -1,4 +1,4 @@
-import { FocusChecklist, ReadinessCard, SessionCard, ThesisDocumentCard, ThesisUploadCard, WelcomeSection, sessionList } from '../components/Dashboard.jsx'
+import { CountdownCard, FocusChecklist, ReadinessCard, SessionCard, ThesisDocumentCard, ThesisUploadCard, WelcomeSection, sessionList } from '../components/Dashboard.jsx'
 import { SectionTitle } from '../components/ui.jsx'
 
 export default function Overview({ state, update, pack, go, uploader }) {
@@ -19,6 +19,7 @@ export default function Overview({ state, update, pack, go, uploader }) {
       <div className="space-y-4 md:hidden">
         <WelcomeSection name={name} mobile />
         <ReadinessCard state={state} pack={pack} mobile go={go} />
+        <CountdownCard state={state} pack={pack} go={go} mobile />
         <ThesisUploadCard uploader={uploader} hasPacks={hasOwn} hasDemo={hasDemo} mobile />
         <div>
           <h2 className="mb-2.5 text-[15px] font-semibold">Your next session</h2>
@@ -49,9 +50,10 @@ export default function Overview({ state, update, pack, go, uploader }) {
               </>
             )}
           </div>
-          <div className="min-w-0">
+          <div className="min-w-0 space-y-4">
+            <CountdownCard state={state} pack={pack} go={go} />
             <ReadinessCard state={state} pack={pack} go={go}>
-              <FocusChecklist state={state} update={update} go={go} />
+              <FocusChecklist state={state} update={update} go={go} pack={pack} />
             </ReadinessCard>
           </div>
         </div>

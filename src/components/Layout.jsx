@@ -3,9 +3,9 @@ import { Award, BookOpen, Menu, Check, ChevronDown, Cloud, CloudOff, House, Laye
 import { levelInfo } from '../lib/storage.js'
 
 const DESKTOP_NAV = [
-  { id: 'overview', label: 'Overview', match: ['overview'] },
+  { id: 'overview', label: 'Overview', match: ['overview', 'plan'] },
   { id: 'guide', label: 'Study guide', match: ['guide'] },
-  { id: 'practice', label: 'Practice', match: ['practice', 'cards', 'typing', 'panel', 'match', 'group', 'leaderboard'] },
+  { id: 'practice', label: 'Practice', match: ['practice', 'cards', 'typing', 'panel', 'match', 'group', 'leaderboard', 'daily', 'explain', 'slides'] },
   { id: 'confidence', label: 'Confidence', match: ['confidence'] },
 ]
 
@@ -14,7 +14,7 @@ const MOBILE_NAV = [
   { id: 'guide', label: 'Guide', icon: BookOpen, match: ['guide'] },
   { id: 'cards', label: 'Cards', icon: Layers, match: ['cards'] },
   { id: 'panel', label: 'Panel', icon: Users, match: ['panel'] },
-  { id: 'more', label: 'More', icon: MoreHorizontal, match: ['more', 'confidence', 'settings', 'practice', 'typing', 'match', 'group', 'badges', 'account', 'leaderboard'] },
+  { id: 'more', label: 'More', icon: MoreHorizontal, match: ['more', 'confidence', 'settings', 'practice', 'typing', 'match', 'group', 'badges', 'account', 'leaderboard', 'daily', 'explain', 'slides', 'plan'] },
 ]
 
 function Brand({ onClick }) {

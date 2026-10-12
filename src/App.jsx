@@ -3,9 +3,10 @@ import { FileUp } from 'lucide-react'
 import { load, save, levelInfo, today, withDefaults } from './lib/storage.js'
 import { extractText } from './lib/extract.js'
 import { buildOfflinePack, cleanTitle } from './lib/offline.js'
-import { buildAiPack } from './lib/ai.js'
+import { buildAiPack, checkServerAI, hasAI, onServerAI } from './lib/ai.js'
 import { DEMO_PACK } from './lib/demo.js'
 import { newBadges } from './lib/badges.js'
+import { logActivity } from './lib/activity.js'
 import { cloudEnabled, onAuthChange, pullData, pushData } from './lib/cloud.js'
 import { BottomNavigation, DesktopHeader, MobileHeader, Toast } from './components/Layout.jsx'
 import Overview from './pages/Overview.jsx'
@@ -22,12 +23,16 @@ import Account from './pages/Account.jsx'
 import Leaderboard from './pages/Leaderboard.jsx'
 import More from './pages/More.jsx'
 import Settings from './pages/Settings.jsx'
+import Plan from './pages/Plan.jsx'
+import Daily from './pages/Daily.jsx'
+import Explain from './pages/Explain.jsx'
+import Slides from './pages/Slides.jsx'
 
-const NEEDS_PACK = ['guide', 'cards', 'typing', 'panel', 'match', 'group']
+const NEEDS_PACK = ['guide', 'cards', 'typing', 'panel', 'match', 'group', 'plan', 'daily', 'explain']
 const PAGES = {
   overview: Overview, guide: Guide, practice: Practice, cards: Flashcards, typing: TypingDefense, match: MatchLink,
   panel: MockPanel, group: Group, confidence: Confidence, badges: Badges, account: Account, leaderboard: Leaderboard,
-  more: More, settings: Settings,
+  more: More, settings: Settings, plan: Plan, daily: Daily, explain: Explain, slides: Slides,
 }
 const pageFromHash = () => (PAGES[location.hash.slice(1)] ? location.hash.slice(1) : 'overview')
 
@@ -47,6 +52,14 @@ export default function App() {
   stateRef.current = state
 
   useEffect(() => save(state), [state])
+
+  // is the app's own AI (server with a hidden key) available?
+  const [, setAiTick] = useState(0)
+  useEffect(() => {
+    const off = onServerAI(() => setAiTick((n) => n + 1))
+    checkServerAI()
+    return off
+  }, [])
   useEffect(() => {
     const onHash = () => setTab(pageFromHash())
     window.addEventListener('hashchange', onHash)
@@ -70,7 +83,7 @@ export default function App() {
       p.xp += amount
       const d = today()
       if (p.lastDay !== d) {
-        const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10)
+        const yesterday = today(new Date(Date.now() - 86400000))
         p.streak = p.lastDay === yesterday ? p.streak + 1 : 1
         p.lastDay = d
       }
@@ -79,6 +92,9 @@ export default function App() {
       return { ...s, profile: p, updatedAt: Date.now() }
     })
   }, [])
+
+  // records what was done today (drives Today's focus and the prep plan)
+  const track = useCallback((key, n = 1) => setState((s) => ({ ...logActivity(s, key, n), updatedAt: Date.now() })), [])
 
   // ---------- badges ----------
   useEffect(() => {
@@ -171,7 +187,7 @@ export default function App() {
       setBusy('Reading your file')
       const text = await extractText(file, (p, label = 'Reading your file') => setBusy(`${label} · ${Math.round(p * 100)}%`))
       let built
-      if (state.settings.apiKey) {
+      if (hasAI(state)) {
         setBusy('AI is studying your paper · about 20 to 60 seconds')
         try {
           built = await buildAiPack(state.settings, text, file.name)
@@ -211,7 +227,7 @@ export default function App() {
   const pack = state.packs.find((p) => p.id === state.activeId)
   const uploader = { pick: () => fileRef.current?.click(), loadDemo, busy, error: uploadError, clearError: () => setUploadError('') }
   const cloud = { enabled: cloudEnabled, user, status: syncStatus, syncNow }
-  const props = { state, update, addXP, pack, go, uploader, cloud }
+  const props = { state, update, addXP, pack, go, uploader, cloud, track }
   const Page = PAGES[tab] || Overview
   const blocked = NEEDS_PACK.includes(tab) && !pack
 

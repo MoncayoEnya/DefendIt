@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { AlertCircle, Bot, CheckCircle2, Flame, Loader2, Smartphone, Trophy } from 'lucide-react'
 import { IconBox, Notice, PageHeader, ProgressBar, SectionTitle } from '../components/ui.jsx'
-import { testKey } from '../lib/ai.js'
+import { hasAI, serverAIEnabled, testKey } from '../lib/ai.js'
 import { levelInfo, LEVELS } from '../lib/storage.js'
 
 export default function Settings({ state, update }) {
@@ -10,6 +10,8 @@ export default function Settings({ state, update }) {
   const [status, setStatus] = useState(null) // { tone, text }
   const [testing, setTesting] = useState(false)
   const lv = levelInfo(state.profile.xp)
+  const server = serverAIEnabled()
+  const aiOn = hasAI(state)
 
   async function saveKey() {
     setTesting(true)
@@ -33,33 +35,44 @@ export default function Settings({ state, update }) {
         <div className="flex items-start gap-3">
           <IconBox icon={Bot} />
           <div className="flex-1">
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <h2 className="text-[15px] font-semibold">AI assistant</h2>
-              <span className={`tag ${state.settings.apiKey ? '!border-brand-2/30 !bg-brand-soft !text-brand' : ''}`}>{state.settings.apiKey ? 'On' : 'Offline mode'}</span>
+              <span className={`tag ${aiOn ? '!border-brand-2/30 !bg-brand-soft !text-brand' : ''}`}>
+                {state.settings.apiKey ? 'On · your own key' : server ? 'On · provided by the app' : 'Offline mode'}
+              </span>
             </div>
-            <p className="text-[13px] text-sub">Uses Google Gemini's free tier for smarter study packs, answer scoring and follow-up questions.</p>
+            <p className="text-[13px] text-sub">
+              {server && !state.settings.apiKey
+                ? 'AI is ready. Study packs, answer scoring, simple explanations and slide reviews all work with nothing to set up.'
+                : 'Uses Google Gemini and Groq for smarter study packs, answer scoring and follow-up questions.'}
+            </p>
           </div>
         </div>
-        <ol className="mt-4 list-decimal space-y-1 pl-5 text-[13px] text-[#2b343d]">
-          <li>Open <a className="font-semibold text-brand underline-offset-2 hover:underline" href="https://aistudio.google.com/apikey" target="_blank" rel="noreferrer">aistudio.google.com/apikey</a> and sign in with Google.</li>
-          <li>Select <b>Create API key</b> and copy it.</li>
-          <li>Paste it below. It is stored only in this browser.</li>
-        </ol>
-        <label className="mt-4 block text-[12px] font-medium text-sub" htmlFor="apikey">Gemini API key</label>
-        <input id="apikey" className="input mt-1 font-mono" type="password" value={key} onChange={(e) => setKey(e.target.value)} placeholder="Paste your key" />
-        <details className="mt-3 text-[13px]">
-          <summary className="cursor-pointer text-sub">Advanced: model name</summary>
-          <input className="input mt-2 font-mono" value={model} onChange={(e) => setModel(e.target.value)} aria-label="Model name" />
-          <p className="mt-1 text-[12px] text-sub">If Google renames its free model, update the name here using the model list in AI Studio.</p>
+
+        <details className="mt-4 rounded-md border border-line p-3 text-[13px]" open={!server || !!state.settings.apiKey}>
+          <summary className="cursor-pointer font-medium">{server ? 'Use your own key instead (optional)' : 'Add a free Gemini key'}</summary>
+          {server && <p className="mt-2 text-[12px] text-sub">Only needed if the app's shared AI is busy. Your own key gives you your own free daily limit.</p>}
+          <ol className="mt-3 list-decimal space-y-1 pl-5 text-[13px] text-[#2b343d]">
+            <li>Open <a className="font-semibold text-brand underline-offset-2 hover:underline" href="https://aistudio.google.com/apikey" target="_blank" rel="noreferrer">aistudio.google.com/apikey</a> and sign in with Google.</li>
+            <li>Select <b>Create API key</b> and copy it.</li>
+            <li>Paste it below. It is stored only in this browser.</li>
+          </ol>
+          <label className="mt-4 block text-[12px] font-medium text-sub" htmlFor="apikey">Gemini API key</label>
+          <input id="apikey" className="input mt-1 font-mono" type="password" value={key} onChange={(e) => setKey(e.target.value)} placeholder="Paste your key" />
+          <details className="mt-3">
+            <summary className="cursor-pointer text-sub">Advanced: model name</summary>
+            <input className="input mt-2 font-mono" value={model} onChange={(e) => setModel(e.target.value)} aria-label="Model name" />
+            <p className="mt-1 text-[12px] text-sub">If Google renames its free model, update the name here using the model list in AI Studio.</p>
+          </details>
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            <button className="btn-primary" onClick={saveKey} disabled={!key.trim() || testing}>{testing ? <><Loader2 size={15} className="animate-spin" /> Testing</> : 'Save and test'}</button>
+            {state.settings.apiKey && (
+              <button className="btn-ghost" onClick={() => { update((s) => ({ ...s, settings: { ...s.settings, apiKey: '' } })); setKey(''); setStatus({ tone: server ? 'green' : 'yellow', text: server ? 'Your key was removed. The app\'s AI is used instead.' : 'AI turned off. Offline mode is active.' }) }}>Remove key</button>
+            )}
+          </div>
         </details>
-        <div className="mt-4 flex flex-wrap items-center gap-2">
-          <button className="btn-primary" onClick={saveKey} disabled={!key.trim() || testing}>{testing ? <><Loader2 size={15} className="animate-spin" /> Testing</> : 'Save and test'}</button>
-          {state.settings.apiKey && (
-            <button className="btn-ghost" onClick={() => { update((s) => ({ ...s, settings: { ...s.settings, apiKey: '' } })); setKey(''); setStatus({ tone: 'yellow', text: 'AI turned off. Offline mode is active.' }) }}>Remove key</button>
-          )}
-        </div>
         {status && <div className="mt-3"><Notice tone={status.tone} icon={status.tone === 'green' ? CheckCircle2 : AlertCircle}>{status.text}</Notice></div>}
-        <p className="mt-3 text-[12px] text-sub">On the free tier, Google may use inputs to improve its products. Avoid uploading confidential material.</p>
+        <p className="mt-3 text-[12px] text-sub">Thesis text is sent to the AI (Google Gemini or Groq) to build your study pack and score answers. On free tiers, providers may use inputs to improve their products, so avoid confidential material.</p>
       </section>
 
       <SectionTitle>Progress</SectionTitle>

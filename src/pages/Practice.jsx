@@ -1,13 +1,21 @@
-import { Award, Keyboard, Layers, Link2, ListOrdered, Users, UsersRound } from 'lucide-react'
+import { Award, CalendarDays, Keyboard, Layers, Link2, ListOrdered, MessageSquareText, Presentation, Timer, Users, UsersRound } from 'lucide-react'
 import { IconBox, ListLink, PageHeader, ProgressBar, SectionTitle } from '../components/ui.jsx'
 import { getGroup } from '../lib/group.js'
 import { packProgress } from '../lib/progress.js'
+import { today } from '../lib/storage.js'
 
 export default function Practice({ state, pack, go }) {
   const p = packProgress(state, pack)
   const members = pack ? getGroup(pack).members.length : 0
   const matchBest = pack ? state.profile.stats?.matchBest?.[pack.id] : null
+  const dailyDone = !!state.profile.dailyDone?.[today()]
   const modes = [
+    {
+      id: 'daily', icon: Timer, tone: 'yellow', title: 'Daily challenge',
+      desc: 'Five key terms and one panel question. Five minutes a day keeps your streak alive.',
+      stat: dailyDone ? 'Done for today' : `${state.profile.stats?.dailyCount || 0} completed`,
+      pct: dailyDone ? 100 : 0, color: 'bg-yellow',
+    },
     {
       id: 'cards', icon: Layers, tone: 'brand', title: 'Flashcards',
       desc: 'Flip or type key terms. Cards you miss return sooner through spaced repetition.',
@@ -36,6 +44,18 @@ export default function Practice({ state, pack, go }) {
       id: 'group', icon: UsersRound, tone: 'blue', title: 'Group mode',
       desc: 'Split panel questions among groupmates and track who practiced what.',
       stat: members ? `${members} member${members === 1 ? '' : 's'}` : 'No members yet',
+      pct: 0, color: 'bg-blue', noBar: true,
+    },
+    {
+      id: 'explain', icon: MessageSquareText, tone: 'brand', title: 'Explain it simply',
+      desc: 'Explain your study in plain words. Get a clarity score and the jargon to cut.',
+      stat: state.profile.stats?.plainBest ? `Best score ${state.profile.stats.plainBest}/10` : 'Not yet tried',
+      pct: (state.profile.stats?.plainBest || 0) * 10, color: 'bg-brand-2',
+    },
+    {
+      id: 'slides', icon: Presentation, tone: 'blue', title: 'Slide checker',
+      desc: 'Upload your PowerPoint. Find wordy slides and missing defense parts.',
+      stat: state.profile.stats?.slidesChecked ? `Checked ${state.profile.stats.slidesChecked} time${state.profile.stats.slidesChecked === 1 ? '' : 's'}` : 'No slides checked yet',
       pct: 0, color: 'bg-blue', noBar: true,
     },
   ]
@@ -72,7 +92,8 @@ export default function Practice({ state, pack, go }) {
         ))}
       </div>
       <SectionTitle>Progress and competition</SectionTitle>
-      <div className="grid gap-2 sm:grid-cols-2">
+      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+        <ListLink icon={CalendarDays} tone="brand" title="Defense countdown" meta={pack?.defenseDate ? `Defense on ${new Date(pack.defenseDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}` : 'Set your date and get a prep plan'} onClick={() => go('plan')} />
         <ListLink icon={Award} tone="yellow" title="Badges" meta={`${Object.keys(state.profile.badges || {}).length} earned`} onClick={() => go('badges')} />
         <ListLink icon={ListOrdered} tone="blue" title="Class leaderboard" meta={state.profile.classCode ? `Class ${state.profile.classCode}` : 'Compete with classmates'} onClick={() => go('leaderboard')} />
       </div>

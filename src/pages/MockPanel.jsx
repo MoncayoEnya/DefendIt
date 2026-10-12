@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Calculator, Check, Clock, Flame, GraduationCap, Info, Loader2, MessageSquareText, Mic, Search, Square, Trophy, Volume2, X } from 'lucide-react'
 import { BackLink, Checkbox, Notice, PageHeader, ProgressBar } from '../components/ui.jsx'
-import { gradeAnswer } from '../lib/ai.js'
+import { gradeAnswer, hasAI } from '../lib/ai.js'
 import { shuffle } from '../lib/match.js'
 import { bumpStat, review } from '../lib/storage.js'
 import { canListen, countFillers, startListening } from '../lib/voice.js'
@@ -17,11 +17,11 @@ const PANEL = [
 const PANELIST_HP = 100
 const PLAYER_HP = 100
 
-export default function MockPanel({ state, pack, update, addXP, go }) {
+export default function MockPanel({ state, pack, update, addXP, go, track }) {
   const [phase, setPhase] = useState('intro') // intro | battle | won | lost
   const [pressure, setPressure] = useState(false)
   const [game, setGame] = useState(null)
-  const hasKey = !!state.settings.apiKey
+  const hasKey = hasAI(state)
   const group = getGroup(pack)
   const groupAvailable = group.members.length >= 2
   const [groupMode, setGroupMode] = useState(() => {
@@ -130,12 +130,12 @@ export default function MockPanel({ state, pack, update, addXP, go }) {
 
   return (
     <div className="max-w-3xl">
-      <Battle game={game} setGame={setGame} group={groupMode ? group : null} pack={pack} state={state} update={update} pressure={pressure} hasKey={hasKey} onEnd={endBattle} />
+      <Battle track={track} game={game} setGame={setGame} group={groupMode ? group : null} pack={pack} state={state} update={update} pressure={pressure} hasKey={hasKey} onEnd={endBattle} />
     </div>
   )
 }
 
-function Battle({ game, setGame, group, pack, state, update, pressure, hasKey, onEnd }) {
+function Battle({ track, game, setGame, group, pack, state, update, pressure, hasKey, onEnd }) {
   const member = PANEL[game.idx]
   const currentIndex = game.followUp ? -1 : game.queue[game.qIdx % game.queue.length]
   const q = game.followUp || pack.questions[currentIndex]
@@ -205,6 +205,7 @@ function Battle({ game, setGame, group, pack, state, update, pressure, hasKey, o
   function nextQuestion() {
     const score = finalScore()
     const qi = currentIndex
+    track('panel')
     if (qi >= 0) update((s) => ({ ...s, mastery: { ...s.mastery, [pack.id]: review(s.mastery[pack.id] || {}, `q${qi}`, score >= 7) } }))
     if (answererId) {
       update((s) => {
@@ -271,7 +272,7 @@ function Battle({ game, setGame, group, pack, state, update, pressure, hasKey, o
         {hit && (
           <div className="fade-up absolute right-4 top-3 rounded-md border border-line bg-white px-2 py-1 text-right text-[12px] font-semibold shadow-sm">
             {hit.dmg > 0 && <div className="text-brand">Convinced +{hit.dmg}</div>}
-            {hit.hurt > 0 && <div className="text-red">Composure −{hit.hurt}</div>}
+            {hit.hurt > 0 && <div className="text-red">Composure -{hit.hurt}</div>}
           </div>
         )}
       </section>

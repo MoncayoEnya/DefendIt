@@ -38,7 +38,7 @@ export const DEMO_PACK = {
     { question: 'Did you consider students who use apps for games, not learning?', type: 'Critical thinking', idealPoints: ['Questionnaire asked specifically about learning apps', 'Admit possible bias', 'Future study can track actual usage'] },
   ],
   weakSpots: [
-    'Causation vs correlation – panels love to test this.',
+    'Causation vs correlation: panels love to test this.',
     'Self-reported usage may be inaccurate.',
     'Only one school, so results may not generalize.',
   ],

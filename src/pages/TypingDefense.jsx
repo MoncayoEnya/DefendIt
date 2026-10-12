@@ -5,7 +5,7 @@ import { maskTerm, norm, shuffle } from '../lib/match.js'
 
 const LIVES = 3
 
-export default function TypingDefense({ state, pack, update, addXP, go }) {
+export default function TypingDefense({ state, pack, update, addXP, go, track }) {
   const best = state.profile.best?.[`typing:${pack.id}`] || 0
   const [phase, setPhase] = useState('menu') // menu | play | over
   const [final, setFinal] = useState(null)
@@ -16,6 +16,7 @@ export default function TypingDefense({ state, pack, update, addXP, go }) {
     setFinal(result)
     setPhase('over')
     addXP(Math.min(Math.round(result.score / 25), 120), 'Typing defense')
+    track('typing')
     update((s) => {
       const p = s.packs.find((x) => x.id === pack.id)
       p.typingSessions = (p.typingSessions || 0) + 1
@@ -125,7 +126,7 @@ function Game({ pack, onEnd }) {
         st.lives -= hit.length
         st.combo = 0
         hit.forEach((e) => { if (!st.missed.includes(e.term)) st.missed.push(e.term) })
-        st.intel = { text: `Missed: ${hit[0].term.term} — ${hit[0].term.definition}`, bad: true, t: 4 }
+        st.intel = { text: `Missed: ${hit[0].term.term}: ${hit[0].term.definition}`, bad: true, t: 4 }
       }
       st.booms = st.booms.filter((b) => (b.t -= dt) > 0)
       if (st.intel && (st.intel.t -= dt) <= 0) st.intel = null

@@ -1,5 +1,5 @@
 // Badge rules. Each badge checks real progress, so nothing is given for free.
-import { BookOpen, CalendarCheck, CalendarDays, Crown, Flame, FileUp, Keyboard, Layers, Link2, Mic, ShieldCheck, Trophy, Users, UsersRound, Wind, AudioLines } from 'lucide-react'
+import { CalendarClock, MessageSquareText, Timer, BookOpen, CalendarCheck, CalendarDays, Crown, Flame, FileUp, Keyboard, Layers, Link2, Mic, ShieldCheck, Trophy, Users, UsersRound, Wind, AudioLines } from 'lucide-react'
 import { levelInfo } from './storage.js'
 import { readiness } from './progress.js'
 
@@ -20,6 +20,9 @@ export const BADGES = [
   { id: 'no-fillers', name: 'No Filler Words', desc: 'Give a 20+ word answer with zero fillers', icon: Mic, goal: 1, value: (s) => stats(s).cleanAnswers || 0 },
   { id: 'smooth-talker', name: 'Smooth Talker', desc: 'Give 10 clean answers with zero fillers', icon: AudioLines, goal: 10, value: (s) => stats(s).cleanAnswers || 0 },
   { id: 'team-player', name: 'Team Player', desc: 'Finish a group practice session', icon: UsersRound, goal: 1, value: (s) => stats(s).groupSessions || 0 },
+  { id: 'planner', name: 'Planner', desc: 'Set your defense date and prep plan', icon: CalendarClock, goal: 1, value: (s) => (s.packs.some((p) => p.defenseDate) ? 1 : 0) },
+  { id: 'daily-7', name: 'Daily Grinder', desc: 'Finish 7 daily challenges', icon: Timer, goal: 7, value: (s) => stats(s).dailyCount || 0 },
+  { id: 'plain-talker', name: 'Plain Talker', desc: 'Score 8+ on Explain it simply', icon: MessageSquareText, goal: 8, value: (s) => stats(s).plainBest || 0 },
   { id: 'calm-mind', name: 'Calm Mind', desc: 'Complete 3 breathing exercises', icon: Wind, goal: 3, value: (s) => s.profile.confidence?.breaths || 0 },
   { id: 'streak-3', name: '3-Day Streak', desc: 'Practice 3 days in a row', icon: CalendarDays, goal: 3, value: (s) => s.profile.streak || 0 },
   { id: 'streak-7', name: '7-Day Streak', desc: 'Practice 7 days in a row', icon: CalendarCheck, goal: 7, value: (s) => s.profile.streak || 0 },

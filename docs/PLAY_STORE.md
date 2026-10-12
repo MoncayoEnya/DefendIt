@@ -56,8 +56,9 @@ In Android Studio:
 Notes for Route B:
 - Run `npm run android:sync` after every code change.
 - If you use cloud saving, create `.env` before syncing so the keys are included in the build.
-- Android's in-app web view does not support the browser's speech recognition, so the **Speak**
-  buttons are hidden in this version (typing still works). Route A does not have this limit.
+- Voice answers use native Android plugins in this version (speech recognition and text-to-speech).
+  The first time a student taps **Speak**, Android asks for microphone permission. The phone needs
+  Google's speech services (preinstalled on most Android phones).
 - App icons and splash screens are already generated in `android/app/src/main/res/`.
 
 ---

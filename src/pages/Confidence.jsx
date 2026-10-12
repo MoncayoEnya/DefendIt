@@ -15,12 +15,12 @@ const SCRIPTS = [
 
 const TIPS = [
   ['Answer first, explain second', 'Start with a direct yes/no or one-line answer, then support it. Panels hate long intros.'],
-  ['Use the 3-part answer', 'Point → Evidence from your study → Why it matters. Done.'],
+  ['Use the 3-part answer', 'Make your point, give evidence from your study, then say why it matters.'],
   ['Pause instead of "uhm"', 'A 2-second silence looks confident. Filler words look nervous.'],
   ['Look at the asker, then the panel', 'Start your answer to the one who asked, then glance at the others.'],
   ['Know your numbers cold', 'Sample size, key statistics, main results. These are asked every time.'],
   ['Agree before you defend', '"That\'s a valid concern…" calms the room before you explain.'],
-  ['Slow down 20%', 'Nervous people talk fast. Aim for about 120–150 words per minute.'],
+  ['Slow down 20%', 'Nervous people talk fast. Aim for about 120 to 150 words per minute.'],
   ['Power pose before you enter', 'Stand tall for 2 minutes before the defense. It really helps your nerves.'],
 ]
 
@@ -47,7 +47,7 @@ const CHECKLIST = [
   'Water bottle and a pen for panel notes',
 ]
 
-export default function Confidence({ state, update, addXP }) {
+export default function Confidence({ state, update, addXP, track }) {
   const checked = state.profile.checklist || {}
   const done = CHECKLIST.filter((_, i) => checked[i]).length
 
@@ -58,8 +58,8 @@ export default function Confidence({ state, update, addXP }) {
       <PageHeader eyebrow="Confidence" title="Calm, clear and ready" desc="Confidence comes from preparation and from practicing out loud. Train both here." />
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <Breathing onDone={() => { bump('breaths'); addXP(10, 'Breathing exercise') }} />
-        <SpeakDrill onDone={(clean, words) => { bump('drills'); if (clean && words >= 20) update((s) => bumpStat(s, 'cleanAnswers')); addXP(clean ? 20 : 12, 'Speaking drill') }} />
+        <Breathing onDone={() => { bump('breaths'); track('breathing'); addXP(10, 'Breathing exercise') }} />
+        <SpeakDrill onDone={(clean, words) => { bump('drills'); track('drill'); if (clean && words >= 20) update((s) => bumpStat(s, 'cleanAnswers')); addXP(clean ? 20 : 12, 'Speaking drill') }} />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">

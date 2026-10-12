@@ -2,7 +2,8 @@
 // Setup: see docs/CLOUD_SETUP.md. Without the two keys in .env, the app simply stays offline.
 
 const URL = import.meta.env.VITE_SUPABASE_URL
-const KEY = import.meta.env.VITE_SUPABASE_ANON_KEY
+// Supabase calls this the "anon" key in older projects and the "publishable" key in newer ones; both work.
+const KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env.VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY
 export const cloudEnabled = !!(URL && KEY)
 
 let clientPromise = null
@@ -10,7 +11,7 @@ export function getClient() {
   if (!cloudEnabled) return Promise.resolve(null)
   if (!clientPromise) {
     clientPromise = import('@supabase/supabase-js').then(({ createClient }) =>
-      createClient(URL, KEY, { auth: { persistSession: true, autoRefreshToken: true } })
+      createClient(URL, KEY, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, flowType: 'pkce' } }) // pkce: Google sign-in returns a ?code= instead of using the # part of the link, which the app uses for pages
     )
   }
   return clientPromise
@@ -29,6 +30,28 @@ export async function signIn(email, password) {
   const { data, error } = await sb.auth.signInWithPassword({ email, password })
   if (error) throw error
   return data
+}
+
+// Google sign-in (turn on the Google provider in Supabase first, see docs/CLOUD_SETUP.md)
+export async function signInWithGoogle() {
+  const sb = await getClient()
+  const { data, error } = await sb.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo: `${location.origin}${location.pathname}#account`, skipBrowserRedirect: true },
+  })
+  if (error) throw error
+  // Check first, so a disabled provider shows a friendly message instead of a raw error page.
+  try {
+    const check = await fetch(data.url, { redirect: 'manual' })
+    if (check.status === 400) {
+      const body = await check.json().catch(() => ({}))
+      throw new Error(body.msg || 'provider is not enabled')
+    }
+  } catch (e) {
+    if (/provider|not enabled|validation/i.test(e.message)) throw e
+    // network or redirect checks we cannot read: just continue to Google
+  }
+  location.href = data.url
 }
 
 export async function resetPassword(email) {

@@ -2,16 +2,12 @@ import { useState } from 'react'
 import { AlertTriangle, Check, ChevronDown, Mic, Volume2 } from 'lucide-react'
 import { CircularProgress, PageHeader, ProgressBar, SectionTitle } from '../components/ui.jsx'
 import { chapterScores, uiState } from '../lib/chapters.js'
+import { speak } from '../lib/voice.js'
 
-export function speak(text) {
-  if (!('speechSynthesis' in window)) return
-  speechSynthesis.cancel()
-  const u = new SpeechSynthesisUtterance(text)
-  u.rate = 0.95
-  speechSynthesis.speak(u)
-}
+export { speak }
 
-export default function Guide({ state, pack, update, addXP, go }) {
+
+export default function Guide({ state, pack, update, addXP, go, track }) {
   const [open, setOpen] = useState(() => {
     const o = uiState.openChapter
     uiState.openChapter = null
@@ -31,6 +27,7 @@ export default function Guide({ state, pack, update, addXP, go }) {
       return s
     })
     addXP(10, 'Chapter reviewed')
+    track('chapters')
   }
 
   return (

@@ -5,7 +5,7 @@ import { chapterIndex } from '../lib/chapters.js'
 import { shuffle } from '../lib/match.js'
 import { review } from '../lib/storage.js'
 
-export default function MatchLink({ state, pack, update, addXP, go }) {
+export default function MatchLink({ state, pack, update, addXP, go, track }) {
   const [mode, setMode] = useState(null) // 'chapter' | 'definition'
   const [round, setRound] = useState(0)
   const best = state.profile.stats?.matchBest?.[pack.id]
@@ -44,6 +44,7 @@ export default function MatchLink({ state, pack, update, addXP, go }) {
           const correct = results.filter((r) => r.ok).length
           const pct = Math.round((correct / results.length) * 100)
           addXP(correct * 5 + (pct === 100 ? 20 : 0), `${correct}/${results.length} matched`)
+          track('match')
           update((s) => {
             let m = s.mastery[pack.id] || {}
             for (const r of results) m = review(m, `t${r.termIndex}`, r.ok)

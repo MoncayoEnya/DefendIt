@@ -49,8 +49,9 @@ export function levelInfo(xp) {
   return { level: i + 1, name: cur.name, next, pct }
 }
 
-export function today() {
-  return new Date().toISOString().slice(0, 10)
+// Local calendar date (YYYY-MM-DD), so a day starts at midnight where the student lives.
+export function today(d = new Date()) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
 // Spaced repetition (Leitner boxes): wrong answers come back sooner.

@@ -13,10 +13,13 @@
     "postinstall": "node scripts/copy-ocr.mjs"
   },
   "dependencies": {
+    "@capacitor-community/speech-recognition": "^7.0.1",
+    "@capacitor-community/text-to-speech": "^8.0.2",
     "@capacitor/android": "^8.5.3",
     "@capacitor/core": "^8.5.3",
     "@supabase/supabase-js": "^2.117.3",
     "@tesseract.js-data/eng": "^1.0.0",
+    "jszip": "^3.10.2",
     "lucide-react": "^1.55.0",
     "mammoth": "^1.13.0",
     "pdfjs-dist": "^6.4.299",

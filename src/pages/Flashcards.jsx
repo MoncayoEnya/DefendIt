@@ -6,7 +6,7 @@ import { maskTerm, similarity, shuffle } from '../lib/match.js'
 
 const SESSION = 10
 
-export default function Flashcards({ state, pack, update, addXP, go }) {
+export default function Flashcards({ state, pack, update, addXP, go, track }) {
   const [mode, setMode] = useState(null) // 'flip' | 'type'
   const [round, setRound] = useState(0)
 
@@ -48,7 +48,7 @@ export default function Flashcards({ state, pack, update, addXP, go }) {
         key={round + mode}
         mode={mode}
         deck={deck}
-        onAnswer={(key, ok) => update((s) => ({ ...s, mastery: { ...s.mastery, [pack.id]: review(s.mastery[pack.id] || {}, key, ok) } }))}
+        onAnswer={(key, ok) => { update((s) => ({ ...s, mastery: { ...s.mastery, [pack.id]: review(s.mastery[pack.id] || {}, key, ok) } })); track('cards') }}
         onDone={(correct) => addXP(correct * (mode === 'type' ? 6 : 4), `${correct}/${deck.length} cards`)}
         onAgain={() => setRound(round + 1)}
         onExit={() => setMode(null)}

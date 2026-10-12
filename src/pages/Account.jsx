@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { AlertCircle, CheckCircle2, Cloud, CloudOff, Loader2, LogOut, RefreshCw } from 'lucide-react'
 import { IconBox, Notice, PageHeader } from '../components/ui.jsx'
-import { cloudEnabled, resetPassword, signIn, signOut, signUp } from '../lib/cloud.js'
+import { cloudEnabled, resetPassword, signIn, signInWithGoogle, signOut, signUp } from '../lib/cloud.js'
 
 export default function Account({ cloud, go }) {
   const [mode, setMode] = useState('signin') // signin | signup
@@ -91,7 +91,12 @@ export default function Account({ cloud, go }) {
   return (
     <div className="max-w-md">
       <PageHeader eyebrow="Account" title={mode === 'signup' ? 'Create your account' : 'Sign in'} desc="Back up your progress and use DefendIt on your phone and computer." />
-      <form onSubmit={submit} className="card space-y-3 p-5">
+      <div className="card p-5">
+        <button type="button" className="btn-ghost h-11 w-full" onClick={async () => { setMsg(null); try { await signInWithGoogle() } catch (e) { setMsg({ tone: 'red', text: friendly(e.message) }) } }}>
+          <GoogleMark /> Continue with Google
+        </button>
+        <div className="my-4 flex items-center gap-3 text-[12px] text-sub"><span className="h-px flex-1 bg-line" />or use email<span className="h-px flex-1 bg-line" /></div>
+      <form onSubmit={submit} className="space-y-3">
         <div>
           <label htmlFor="email" className="text-[12px] font-medium text-sub">Email</label>
           <input id="email" type="email" required autoComplete="email" className="input mt-1" value={email} onChange={(e) => setEmail(e.target.value)} />
@@ -110,12 +115,19 @@ export default function Account({ cloud, go }) {
           {mode === 'signin' && <button type="button" className="text-sub hover:text-ink" onClick={forgot}>Forgot password</button>}
         </div>
       </form>
+      </div>
       <p className="mt-3 text-center text-[12px] text-sub">When you sign in, the newest progress (this device or the cloud) is kept.</p>
     </div>
   )
 }
 
+// Simple neutral "G" mark for the Google button (not the official logo).
+function GoogleMark() {
+  return <span className="grid h-5 w-5 place-items-center rounded-full border border-line text-[11px] font-bold text-ink" aria-hidden>G</span>
+}
+
 function friendly(m = '') {
+  if (/provider is not enabled|unsupported provider/i.test(m)) return 'Google sign-in is not turned on yet. In Supabase, enable the Google provider (see docs/CLOUD_SETUP.md).'
   if (/invalid login/i.test(m)) return 'Wrong email or password.'
   if (/email not confirmed/i.test(m)) return 'Please confirm your email first. Check your inbox.'
   if (/already registered/i.test(m)) return 'That email already has an account. Sign in instead.'
