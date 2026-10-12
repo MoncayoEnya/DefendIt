@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Award, BookOpen, Check, ChevronDown, Cloud, CloudOff, House, Layers, ListOrdered, LogOut, MoreHorizontal, Pencil, Settings, ShieldCheck, Trophy, Users } from 'lucide-react'
+import { Award, BookOpen, Menu, Check, ChevronDown, Cloud, CloudOff, House, Layers, ListOrdered, LogOut, MoreHorizontal, Pencil, Settings, ShieldCheck, Trophy, Users } from 'lucide-react'
 import { levelInfo } from '../lib/storage.js'
 
 const DESKTOP_NAV = [
@@ -60,11 +60,17 @@ function ProfileMenu({ state, update, go, compact, cloud }) {
 
   return (
     <div className="relative" ref={ref}>
-      <button onClick={() => setOpen(!open)} aria-expanded={open} aria-haspopup="menu" className="flex h-10 items-center gap-2 rounded-md pl-1 pr-1.5 hover:bg-bg">
-        <Avatar name={display} size={compact ? 28 : 32} />
-        <span className="max-w-28 truncate text-[13px] font-medium">{display}</span>
-        <ChevronDown size={15} className="text-sub" aria-hidden />
-      </button>
+      {compact ? (
+        <button onClick={() => setOpen(!open)} aria-expanded={open} aria-haspopup="menu" aria-label="Open menu" className="grid h-10 w-10 place-items-center rounded-md text-ink hover:bg-bg">
+          <Menu size={22} strokeWidth={1.75} aria-hidden />
+        </button>
+      ) : (
+        <button onClick={() => setOpen(!open)} aria-expanded={open} aria-haspopup="menu" className="flex h-10 items-center gap-2 rounded-md pl-1 pr-1.5 hover:bg-bg">
+          <Avatar name={display} size={32} />
+          <span className="max-w-28 truncate text-[13px] font-medium">{display}</span>
+          <ChevronDown size={15} className="text-sub" aria-hidden />
+        </button>
+      )}
       {open && (
         <div role="menu" className="fade-up absolute right-0 top-12 z-50 w-72 rounded-lg border border-line bg-white p-2 shadow-[0_8px_24px_rgba(21,27,34,.08)]">
           <div className="flex items-center gap-3 p-2">
@@ -146,7 +152,12 @@ export function MobileHeader({ go, state, update, cloud }) {
     <header className="sticky top-0 z-40 border-b border-line bg-white md:hidden">
       <div className="flex h-14 items-center justify-between px-4">
         <Brand onClick={() => go('overview')} />
-        <ProfileMenu state={state} update={update} go={go} compact cloud={cloud} />
+        <div className="flex items-center gap-1.5">
+          <button onClick={() => go('badges')} className="h-8 rounded-full bg-brand-soft px-3 text-[13px] font-semibold text-brand" aria-label={`${state.profile.xp} XP, view badges`}>
+            {state.profile.xp} XP
+          </button>
+          <ProfileMenu state={state} update={update} go={go} compact cloud={cloud} />
+        </div>
       </div>
     </header>
   )

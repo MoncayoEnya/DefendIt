@@ -12,7 +12,7 @@ export default function Account({ cloud, go }) {
 
   if (!cloudEnabled) {
     return (
-      <div className="mx-auto max-w-xl">
+      <div className="max-w-xl">
         <PageHeader eyebrow="Account" title="Cloud saving is not set up yet" desc="Your progress is saved on this device. To sign in and sync across phones and computers, the app owner needs to connect a free Supabase project." />
         <section className="card flex gap-3 p-5">
           <IconBox icon={CloudOff} tone="yellow" />
@@ -61,7 +61,7 @@ export default function Account({ cloud, go }) {
   if (cloud.user) {
     const st = cloud.status
     return (
-      <div className="mx-auto max-w-xl">
+      <div className="max-w-xl">
         <PageHeader eyebrow="Account" title="Your account" desc="Your progress is backed up and syncs to any device where you sign in." />
         <section className="card p-5">
           <div className="flex items-center gap-3">
@@ -89,7 +89,7 @@ export default function Account({ cloud, go }) {
   }
 
   return (
-    <div className="mx-auto max-w-md">
+    <div className="max-w-md">
       <PageHeader eyebrow="Account" title={mode === 'signup' ? 'Create your account' : 'Sign in'} desc="Back up your progress and use DefendIt on your phone and computer." />
       <form onSubmit={submit} className="card space-y-3 p-5">
         <div>

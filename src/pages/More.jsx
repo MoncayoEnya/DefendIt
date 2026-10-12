@@ -17,7 +17,7 @@ export default function More({ state, update, go, uploader, cloud }) {
   }
 
   return (
-    <div className="mx-auto max-w-2xl">
+    <div className="max-w-2xl">
       <PageHeader eyebrow="More" title="Everything else" desc={`Level ${lv.level} · ${lv.name} · ${state.profile.xp} XP · ${state.profile.streak}-day streak`} />
 
       <div className="card p-4"><FocusChecklist state={state} update={update} go={go} /></div>

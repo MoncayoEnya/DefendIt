@@ -63,7 +63,7 @@ export default function MockPanel({ state, pack, update, addXP, go }) {
 
   if (phase === 'intro' || !game) {
     return (
-      <div className="mx-auto max-w-3xl">
+      <div className="max-w-3xl">
         <BackLink onClick={() => go('practice')}>Practice</BackLink>
         <PageHeader eyebrow="Practice panel" title="Face the panel" desc="Three panelists question you on your paper. Strong answers win them over. Weak answers cost you composure." />
         <div className="grid gap-3 sm:grid-cols-3">
@@ -103,7 +103,7 @@ export default function MockPanel({ state, pack, update, addXP, go }) {
   if (phase === 'won' || phase === 'lost') {
     const won = phase === 'won'
     return (
-      <div className="mx-auto max-w-xl">
+      <div className="max-w-xl">
         <div className="card fade-up p-8 text-center">
           <span className={`mx-auto grid h-12 w-12 place-items-center rounded-full ${won ? 'bg-brand-soft text-brand' : 'bg-red-soft text-red'}`}>
             {won ? <Trophy size={24} strokeWidth={1.75} /> : <X size={24} strokeWidth={1.75} />}
@@ -129,7 +129,7 @@ export default function MockPanel({ state, pack, update, addXP, go }) {
   }
 
   return (
-    <div className="mx-auto max-w-3xl">
+    <div className="max-w-3xl">
       <Battle game={game} setGame={setGame} group={groupMode ? group : null} pack={pack} state={state} update={update} pressure={pressure} hasKey={hasKey} onEnd={endBattle} />
     </div>
   )

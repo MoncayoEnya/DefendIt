@@ -44,7 +44,7 @@ export default function Group({ pack, update, go }) {
   const ready = g.members.length >= 2
 
   return (
-    <div className="mx-auto max-w-4xl">
+    <div className="max-w-4xl">
       <BackLink onClick={() => go('practice')}>Practice</BackLink>
       <PageHeader eyebrow="Group mode" title="Defend as a team" desc="Add your groupmates, split the panel questions fairly, then practice together on one device. Each member's answers are tracked separately." />
 
@@ -54,8 +54,25 @@ export default function Group({ pack, update, go }) {
           <input className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder="Groupmate's name" aria-label="Groupmate's name" maxLength={30} />
           <button className="btn-primary shrink-0" disabled={!name.trim() || g.members.length >= 8}><Plus size={16} /> Add</button>
         </form>
+        {g.members.length > 0 && (
+          <ul className="mt-4 divide-y divide-line md:hidden">
+            {summary.map((m) => (
+              <li key={m.id} className="flex items-center gap-3 py-3">
+                <Avatar name={m.name} size={32} />
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-[14px] font-semibold">{m.name}</div>
+                  <div className="mt-1 flex items-center gap-2 text-[12px] text-sub">
+                    <span className="w-12 shrink-0"><ProgressBar value={m.assigned ? (m.practiced / m.assigned) * 100 : 0} className="h-1.5" /></span>
+                    <span className="truncate">{m.practiced}/{m.assigned} practiced · {m.avg != null ? `avg ${m.avg}/10` : 'no score yet'}</span>
+                  </div>
+                </div>
+                <button onClick={() => removeMember(m.id)} className="grid h-9 w-9 place-items-center rounded-md text-sub hover:bg-red-soft hover:text-red" aria-label={`Remove ${m.name}`}><Trash2 size={15} /></button>
+              </li>
+            ))}
+          </ul>
+        )}
         {g.members.length > 0 ? (
-          <div className="mt-4 overflow-x-auto">
+          <div className="mt-4 hidden overflow-x-auto md:block">
             <table className="w-full min-w-[480px] text-left text-[13px]">
               <thead>
                 <tr className="border-b border-line text-[12px] text-sub">
@@ -89,7 +106,7 @@ export default function Group({ pack, update, go }) {
         ) : (
           <p className="mt-3 text-[13px] text-sub">No members yet. Add at least two to split the questions.</p>
         )}
-        <div className="mt-4 flex flex-wrap gap-2">
+        <div className="mt-4 grid gap-2 sm:flex sm:flex-wrap">
           <button className="btn-primary" disabled={!ready} onClick={() => { uiState.groupMode = true; go('panel') }}><Play size={15} /> Start group practice</button>
           <button className="btn-ghost" disabled={!ready} onClick={() => saveGroup((gr) => ({ ...gr, assign: autoSplit(pack, gr.members) }))}><Shuffle size={15} /> Split again</button>
         </div>

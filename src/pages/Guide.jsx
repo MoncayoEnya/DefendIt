@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { AlertTriangle, Check, ChevronDown, Mic, Volume2 } from 'lucide-react'
-import { PageHeader, ProgressBar, SectionTitle } from '../components/ui.jsx'
+import { CircularProgress, PageHeader, ProgressBar, SectionTitle } from '../components/ui.jsx'
 import { chapterScores, uiState } from '../lib/chapters.js'
 
 export function speak(text) {
@@ -20,6 +20,8 @@ export default function Guide({ state, pack, update, addXP, go }) {
   const scores = chapterScores(state, pack)
   const [showQ, setShowQ] = useState({})
   const read = pack.readSections || []
+  const avgChapter = scores.length ? Math.round(scores.reduce((a, c) => a + c.score, 0) / scores.length) : 0
+  const meta = `${pack.sections.length} chapter${pack.sections.length === 1 ? '' : 's'} · ${pack.terms.length} key terms`
 
   function markRead(i) {
     if (read.includes(i)) return
@@ -33,23 +35,31 @@ export default function Guide({ state, pack, update, addXP, go }) {
 
   return (
     <div>
-      <PageHeader
-        eyebrow={pack.sample ? 'Study guide · Sample thesis' : 'Study guide'}
-        title={pack.title}
-        desc={`${pack.fileName} · ${pack.sections.length} chapters · ${pack.terms.length} key terms · ${pack.questions.length} panel questions`}
-      />
+      {/* phone: compact page title */}
+      <div className="mb-4 md:hidden">
+        <h1 className="text-[26px] font-bold leading-tight tracking-tight">Study Guide</h1>
+        <p className="mt-1 text-[14px] font-semibold leading-snug">{pack.title}</p>
+        <p className="text-[12px] text-sub">{pack.fileName} · {meta}{pack.sample ? ' · Sample' : ''}</p>
+      </div>
+      <div className="hidden md:block">
+        <PageHeader
+          eyebrow={pack.sample ? 'Study guide · Sample thesis' : 'Study guide'}
+          title={pack.title}
+          desc={`${pack.fileName} · ${meta} · ${pack.questions.length} panel questions`}
+        />
+      </div>
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">
-        <div className="min-w-0 space-y-4">
+        <div className="flex min-w-0 flex-col gap-4">
           {pack.overview && (
-            <section className="card p-5">
+            <section className="card order-1 p-4 md:order-none md:p-5">
               <h2 className="mb-1.5 text-[15px] font-semibold">Your study in brief</h2>
               <p className="text-[14px] leading-relaxed text-[#2b343d]">{pack.overview}</p>
             </section>
           )}
 
           {pack.elevatorPitch && (
-            <section className="card border-l-4 !border-l-brand p-5">
+            <section className="card order-3 border-l-4 !border-l-brand p-4 md:order-none md:p-5">
               <div className="mb-2 flex items-center justify-between gap-2">
                 <h2 className="flex items-center gap-2 text-[15px] font-semibold"><Mic size={17} strokeWidth={1.75} className="text-brand" /> Opening statement to practice</h2>
                 <button className="btn-ghost !h-8 !px-3 !text-[12px]" onClick={() => speak(pack.elevatorPitch)}><Volume2 size={15} /> Listen</button>
@@ -59,13 +69,22 @@ export default function Guide({ state, pack, update, addXP, go }) {
             </section>
           )}
 
-          <section>
-            <div className="mb-2.5 flex items-end justify-between gap-3">
-              <h2 className="text-[15px] font-semibold md:text-[17px]">Chapters</h2>
+          <section className="order-2 md:order-none">
+            <div className="mb-2.5 hidden items-end justify-between gap-3 md:flex">
+              <h2 className="text-[17px] font-semibold">Chapters</h2>
               <span className="text-[12px] text-sub">{read.length} of {pack.sections.length} reviewed</span>
             </div>
-            <ProgressBar value={(read.length / pack.sections.length) * 100} className="mb-3 h-1.5" />
+            <ProgressBar value={(read.length / pack.sections.length) * 100} className="mb-3 hidden h-1.5 md:block" />
             <div className="card divide-y divide-line">
+              {/* phone: progress header inside the card */}
+              <div className="flex items-center justify-between gap-4 p-4 md:hidden">
+                <div>
+                  <h2 className="text-[15px] font-semibold">Chapters progress</h2>
+                  <p className="mt-0.5 text-[12px] text-sub">{read.length} of {pack.sections.length} reviewed</p>
+                  <p className="text-[12px] text-sub">{pack.terms.length} key terms</p>
+                </div>
+                <CircularProgress value={avgChapter} size={68} stroke={7} label={`Chapters readiness ${avgChapter}%`} />
+              </div>
               {pack.sections.map((s, i) => {
                 const isOpen = open === i
                 const done = read.includes(i)
@@ -83,7 +102,7 @@ export default function Guide({ state, pack, update, addXP, go }) {
                       <ChevronDown size={17} className={`text-sub transition-transform ${isOpen ? 'rotate-180' : ''}`} />
                     </button>
                     {isOpen && (
-                      <div className="fade-up space-y-3 px-4 pb-4 pl-[52px]">
+                      <div className="fade-up space-y-3 px-4 pb-4 md:pl-[52px]">
                         <p className="text-[14px] leading-relaxed text-[#2b343d]">{s.summary}</p>
                         {s.keyPoints?.length > 0 && (
                           <ul className="space-y-1.5">
@@ -92,7 +111,7 @@ export default function Guide({ state, pack, update, addXP, go }) {
                             ))}
                           </ul>
                         )}
-                        {!done && <button className="btn-primary !h-9" onClick={() => { markRead(i); setOpen(i + 1) }}>Mark as reviewed</button>}
+                        {!done && <button className="btn-primary h-11 w-full md:!h-9 md:w-auto" onClick={() => { markRead(i); setOpen(i + 1) }}>Mark as reviewed</button>}
                       </div>
                     )}
                   </div>
@@ -101,7 +120,7 @@ export default function Guide({ state, pack, update, addXP, go }) {
             </div>
           </section>
 
-          <section>
+          <section className="order-4 md:order-none">
             <SectionTitle right={<button className="text-[13px] font-semibold text-brand" onClick={() => go('panel')}>Practice with the panel</button>}>Likely panel questions</SectionTitle>
             <div className="space-y-2">
               {pack.questions.map((q, i) => (
@@ -122,7 +141,7 @@ export default function Guide({ state, pack, update, addXP, go }) {
         </div>
 
         <aside className="min-w-0 space-y-4">
-          <section className="card p-5">
+          <section className="card hidden p-5 md:block">
             <h2 className="mb-1 text-[15px] font-semibold">Readiness by chapter</h2>
             <p className="mb-3 text-[12px] text-sub">From reading, flashcards and panel answers in each chapter.</p>
             <ul className="space-y-2.5">

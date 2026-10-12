@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { FileUp } from 'lucide-react'
 import { load, save, levelInfo, today, withDefaults } from './lib/storage.js'
 import { extractText } from './lib/extract.js'
-import { buildOfflinePack } from './lib/offline.js'
+import { buildOfflinePack, cleanTitle } from './lib/offline.js'
 import { buildAiPack } from './lib/ai.js'
 import { DEMO_PACK } from './lib/demo.js'
 import { newBadges } from './lib/badges.js'
@@ -32,7 +32,12 @@ const PAGES = {
 const pageFromHash = () => (PAGES[location.hash.slice(1)] ? location.hash.slice(1) : 'overview')
 
 export default function App() {
-  const [state, setState] = useState(load)
+  const [state, setState] = useState(() => {
+    const s = load()
+    // repair titles saved by older versions (e.g. a "_____" signature line picked as the title)
+    s.packs = s.packs.map((p) => ({ ...p, title: cleanTitle(p.title, p.fileName) }))
+    return s
+  })
   const [tab, setTab] = useState(pageFromHash)
   const [toast, setToast] = useState(null)
   const [busy, setBusy] = useState(null)
@@ -180,7 +185,7 @@ export default function App() {
       }
       const id = crypto.randomUUID()
       update((s) => {
-        s.packs.unshift({ ...built, id, createdAt: Date.now() })
+        s.packs.unshift({ ...built, title: cleanTitle(built.title, file.name), id, createdAt: Date.now() })
         s.activeId = id
         return s
       })

@@ -12,7 +12,7 @@ export default function MatchLink({ state, pack, update, addXP, go }) {
 
   if (!mode) {
     return (
-      <div className="mx-auto max-w-3xl">
+      <div className="max-w-3xl">
         <BackLink onClick={() => go('practice')}>Practice</BackLink>
         <PageHeader eyebrow="Match & Link" title="Connect the ideas" desc="Drag each term to where it belongs. On a phone you can also tap a term, then tap its target." />
         <div className="grid gap-3 sm:grid-cols-2">
@@ -33,7 +33,7 @@ export default function MatchLink({ state, pack, update, addXP, go }) {
   }
 
   return (
-    <div className="mx-auto max-w-4xl">
+    <div className="max-w-4xl">
       <Board
         key={`${mode}${round}`}
         mode={mode}

@@ -26,7 +26,7 @@ export default function Flashcards({ state, pack, update, addXP, go }) {
 
   if (!mode) {
     return (
-      <div className="mx-auto max-w-3xl">
+      <div className="max-w-3xl">
         <BackLink onClick={() => go('practice')}>Practice</BackLink>
         <PageHeader eyebrow="Flashcards" title="Lock in your key terms" desc="Cards you miss come back sooner. Cards you know well wait longer." />
         <div className="card mb-4 grid grid-cols-3 divide-x divide-line">
@@ -43,7 +43,7 @@ export default function Flashcards({ state, pack, update, addXP, go }) {
   }
 
   return (
-    <div className="mx-auto max-w-2xl">
+    <div className="max-w-2xl">
       <Session
         key={round + mode}
         mode={mode}

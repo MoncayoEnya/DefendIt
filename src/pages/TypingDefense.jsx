@@ -26,7 +26,7 @@ export default function TypingDefense({ state, pack, update, addXP, go }) {
 
   if (phase === 'play') {
     return (
-      <div className="mx-auto max-w-3xl">
+      <div className="max-w-3xl">
         <Game pack={pack} onEnd={finish} />
       </div>
     )
@@ -35,7 +35,7 @@ export default function TypingDefense({ state, pack, update, addXP, go }) {
   const newBest = final && final.score > prevBest
 
   return (
-    <div className="mx-auto max-w-3xl">
+    <div className="max-w-3xl">
       <BackLink onClick={() => go('practice')}>Practice</BackLink>
       <PageHeader eyebrow="Typing defense" title="Defend your base" desc="Key terms from your thesis fall toward your base. Type each one before it lands. Every third wave shows only a definition, so you must recall the term." />
 

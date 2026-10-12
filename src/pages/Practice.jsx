@@ -42,7 +42,23 @@ export default function Practice({ state, pack, go }) {
   return (
     <div>
       <PageHeader eyebrow="Practice" title="Choose how to train" desc={pack ? `Built from: ${pack.title}` : 'Upload a thesis to unlock practice modes.'} />
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      {/* phone: compact list */}
+      <div className="space-y-2.5 md:hidden">
+        {modes.map((m) => (
+          <button key={m.id} onClick={() => go(m.id)} className="card-link flex w-full items-start gap-3 p-4 text-left">
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2.5">
+                <IconBox icon={m.icon} tone={m.tone} size="sm" />
+                <h2 className="text-[15px] font-semibold">{m.title}</h2>
+              </div>
+              <p className="mt-2 line-clamp-2 text-[13px] leading-snug text-sub">{m.desc}</p>
+            </div>
+          </button>
+        ))}
+      </div>
+
+      {/* tablet & desktop: cards with progress */}
+      <div className="hidden gap-3 md:grid md:grid-cols-2 lg:grid-cols-3">
         {modes.map((m) => (
           <button key={m.id} onClick={() => go(m.id)} className="card-link flex flex-col p-5 text-left">
             <IconBox icon={m.icon} tone={m.tone} />

@@ -38,7 +38,7 @@ export default function Leaderboard({ state, update, cloud, go }) {
 
   if (!cloudEnabled || !cloud.user) {
     return (
-      <div className="mx-auto max-w-xl">
+      <div className="max-w-xl">
         <PageHeader eyebrow="Leaderboard" title="Compete with classmates" desc="Join your class with a shared code and see who is most prepared. Only your name and scores are shared, never your thesis." />
         <section className="card flex items-center gap-3 p-5">
           <IconBox icon={LogIn} />
@@ -66,7 +66,7 @@ export default function Leaderboard({ state, update, cloud, go }) {
 
   if (!code) {
     return (
-      <div className="mx-auto max-w-xl">
+      <div className="max-w-xl">
         <PageHeader eyebrow="Leaderboard" title="Join your class" desc="Agree on a code with your classmates, like the section and year (for example IT4A-2026). Everyone who enters the same code shares one leaderboard." />
         <form onSubmit={join} className="card flex gap-2 p-5">
           <input className="input font-mono uppercase" value={input} onChange={(e) => setInput(e.target.value)} placeholder="Class code" aria-label="Class code" maxLength={20} />
@@ -83,7 +83,7 @@ export default function Leaderboard({ state, update, cloud, go }) {
   const fmt = SORTS.find((s) => s.id === sort).fmt
 
   return (
-    <div className="mx-auto max-w-3xl">
+    <div className="max-w-3xl">
       <PageHeader
         eyebrow="Leaderboard"
         title={`Class ${code}`}

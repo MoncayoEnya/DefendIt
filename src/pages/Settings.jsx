@@ -26,7 +26,7 @@ export default function Settings({ state, update }) {
   }
 
   return (
-    <div className="mx-auto max-w-3xl">
+    <div className="max-w-3xl">
       <PageHeader eyebrow="Settings" title="Settings" desc="Everything is saved on this device only." />
 
       <section className="card p-5">

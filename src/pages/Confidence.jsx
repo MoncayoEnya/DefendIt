@@ -63,7 +63,7 @@ export default function Confidence({ state, update, addXP }) {
       </div>
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
-        <div className="min-w-0">
+        <div className="order-2 min-w-0 lg:order-none">
           <SectionTitle>Helpful lines for hard moments</SectionTitle>
           <div className="card divide-y divide-line">
             {SCRIPTS.map((s, i) => (
@@ -91,7 +91,7 @@ export default function Confidence({ state, update, addXP }) {
           </div>
         </div>
 
-        <div className="min-w-0">
+        <div className="order-1 min-w-0 lg:order-none">
           <SectionTitle right={<span className="text-[12px] text-sub">{done} of {CHECKLIST.length}</span>}>Defense-day checklist</SectionTitle>
           <section className="card p-4">
             <ProgressBar value={(done / CHECKLIST.length) * 100} color="bg-yellow" className="mb-2 h-1.5" />
@@ -144,8 +144,8 @@ function Breathing({ onDone }) {
           <p className="text-[12px] text-sub">One minute. Use it right before you enter the room.</p>
         </div>
       </div>
-      <div className="my-5 grid h-36 place-items-center">
-        <div className={`grid place-items-center rounded-full border-2 border-blue/60 bg-blue-soft transition-all ease-in-out ${big ? 'h-36 w-36' : 'h-20 w-20'}`} style={{ transitionDuration: '4000ms' }}>
+      <div className="my-4 grid h-28 place-items-center md:my-5 md:h-36">
+        <div className={`grid place-items-center rounded-full border-2 border-blue/60 bg-blue-soft transition-all ease-in-out ${big ? 'h-28 w-28 md:h-36 md:w-36' : 'h-16 w-16 md:h-20 md:w-20'}`} style={{ transitionDuration: '4000ms' }}>
           <span className="text-[12px] font-semibold text-blue">{on ? STEPS[step] : finished ? 'Done' : 'Ready'}</span>
         </div>
       </div>
