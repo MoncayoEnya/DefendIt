@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Printer } from 'lucide-react'
 import { BackLink, Checkbox, PageHeader } from '../components/ui.jsx'
+import { fillProfile, splitBlanks } from '../lib/profile.js'
 
 const SECTIONS = [
   ['summary', 'Study summary'],
@@ -13,7 +14,7 @@ const SECTIONS = [
 
 const points = (text) => (text || '').split(/(?<=[.!?])\s+(?=[A-Z])/).map((s) => s.trim()).filter((s) => s.length > 15)
 
-export default function Reviewer({ pack, go }) {
+export default function Reviewer({ state, pack, go }) {
   const [on, setOn] = useState(() => Object.fromEntries(SECTIONS.map(([k]) => [k, true])))
   const date = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
 
@@ -51,7 +52,7 @@ export default function Reviewer({ pack, go }) {
 
         {on.opening && pack.elevatorPitch && (
           <Block title="Opening line">
-            <p className="rounded border-l-4 border-brand bg-brand-soft/50 p-3 text-[13px] italic leading-relaxed">{pack.elevatorPitch}</p>
+            <p className="rounded border-l-4 border-brand bg-brand-soft/50 p-3 text-[13px] italic leading-relaxed">{splitBlanks(fillProfile(pack.elevatorPitch, state.profile)).map((p) => (p.blank ? '______________' : p.text)).join('')}</p>
           </Block>
         )}
 

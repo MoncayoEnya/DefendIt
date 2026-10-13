@@ -11,7 +11,7 @@ import { applyTheme, watchSystemTheme } from './lib/theme.js'
 import { isNative, notifyOnce, reminderDue, scheduleNative } from './lib/reminders.js'
 import { focusTasks } from './lib/plan.js'
 import { taskDone } from './lib/activity.js'
-import { cloudEnabled, onAuthChange, pullData, pushData } from './lib/cloud.js'
+import { cloudEnabled, listenForAppLink, onAuthChange, pullData, pushData } from './lib/cloud.js'
 import { BottomNavigation, DesktopHeader, MobileHeader, Toast } from './components/Layout.jsx'
 import Overview from './pages/Overview.jsx'
 import Guide from './pages/Guide.jsx'
@@ -34,12 +34,16 @@ import Slides from './pages/Slides.jsx'
 import Reviewer from './pages/Reviewer.jsx'
 import Survey from './pages/Survey.jsx'
 import Evaluation from './pages/Evaluation.jsx'
+import Profile from './pages/Profile.jsx'
+import Read from './pages/Read.jsx'
+import { saveText } from './lib/textstore.js'
+import { namesFromUser } from './lib/profile.js'
 
-const NEEDS_PACK = ['guide', 'cards', 'typing', 'panel', 'match', 'group', 'plan', 'daily', 'explain', 'reviewer']
+const NEEDS_PACK = ['guide', 'cards', 'typing', 'panel', 'match', 'group', 'plan', 'daily', 'explain', 'reviewer', 'read']
 const PAGES = {
   overview: Overview, guide: Guide, practice: Practice, cards: Flashcards, typing: TypingDefense, match: MatchLink,
   panel: MockPanel, group: Group, confidence: Confidence, badges: Badges, account: Account, leaderboard: Leaderboard,
-  more: More, settings: Settings, plan: Plan, daily: Daily, explain: Explain, slides: Slides, reviewer: Reviewer, survey: Survey, evaluation: Evaluation,
+  more: More, settings: Settings, plan: Plan, daily: Daily, explain: Explain, slides: Slides, reviewer: Reviewer, survey: Survey, evaluation: Evaluation, profile: Profile, read: Read,
 }
 const pageFromHash = () => (PAGES[location.hash.slice(1)] ? location.hash.slice(1) : 'overview')
 
@@ -134,6 +138,15 @@ export default function App() {
     onAuthChange((u) => {
       // back from Google sign-in: open the Account page
       if (u) {
+        // fill in the profile from the Google account the first time
+        const g = namesFromUser(u)
+        if (g.full || g.photo) {
+          setState((s) => {
+            const p = s.profile
+            if ((p.fullName || !g.full) && (p.name || !g.first) && (p.photo === g.photo || !g.photo)) return s
+            return { ...s, profile: { ...p, name: p.name || g.first, fullName: p.fullName || g.full, photo: g.photo || p.photo } }
+          })
+        }
         try {
           if (sessionStorage.getItem('defendit:afterAuth')) {
             sessionStorage.removeItem('defendit:afterAuth')
@@ -146,6 +159,8 @@ export default function App() {
         return u
       })
     }).then((f) => (off = f))
+    // Android app: Google sends people back through the app link
+    listenForAppLink((e) => { if (e) setToast({ text: `Google sign-in failed: ${e.message}`, big: true }) })
     return () => off()
   }, [])
 
@@ -220,6 +235,7 @@ export default function App() {
         built = buildOfflinePack(text, file.name)
       }
       const id = crypto.randomUUID()
+      saveText(id, text) // full text stays on this device for "Read my thesis"
       update((s) => {
         s.packs.unshift({ ...built, title: cleanTitle(built.title, file.name), id, createdAt: Date.now() })
         s.activeId = id

@@ -1,5 +1,7 @@
 import { useMemo, useState } from 'react'
-import { AlertTriangle, BookOpen, Check, ChevronDown, CircleHelp, FileText, Layers, ListChecks, Mic, Printer, Search, Users, Volume2 } from 'lucide-react'
+import { MissingProfile, OpeningText } from '../components/Opening.jsx'
+import { speakable } from '../lib/profile.js'
+import { AlertTriangle, BookOpen, BookOpenText, Check, ChevronDown, CircleHelp, FileText, Layers, ListChecks, Mic, Printer, Search, Users, Volume2 } from 'lucide-react'
 import { CircularProgress, Hint, ProgressBar, Tabs } from '../components/ui.jsx'
 import { chapterScores, uiState } from '../lib/chapters.js'
 import { speak } from '../lib/voice.js'
@@ -52,7 +54,7 @@ export default function Guide({ state, pack, update, addXP, go, track }) {
 
       <Tabs tabs={tabs} value={tab} onChange={setTab} />
 
-      {tab === 'summary' && <SummaryTab pack={pack} scores={scores} read={read} go={go} setTab={setTab} />}
+      {tab === 'summary' && <SummaryTab pack={pack} scores={scores} read={read} go={go} setTab={setTab} profile={state.profile} />}
       {tab === 'chapters' && <ChaptersTab pack={pack} scores={scores} read={read} markRead={markRead} />}
       {tab === 'terms' && <TermsTab pack={pack} go={go} />}
       {tab === 'questions' && <QuestionsTab pack={pack} go={go} />}
@@ -60,7 +62,7 @@ export default function Guide({ state, pack, update, addXP, go, track }) {
   )
 }
 
-function SummaryTab({ pack, scores, read, go, setTab }) {
+function SummaryTab({ pack, scores, read, go, setTab, profile }) {
   const points = toPoints(pack.overview)
   const [script, setScript] = useState(false)
   const weakest = [...scores].sort((a, b) => a.score - b.score).slice(0, 3)
@@ -74,6 +76,14 @@ function SummaryTab({ pack, scores, read, go, setTab }) {
   return (
     <div className="grid gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(260px,2fr)]">
       <div className="min-w-0 space-y-4">
+        <button className="card-link flex w-full items-center gap-3 p-4 text-left" onClick={() => go('read')}>
+          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-md bg-yellow-soft text-yellow-ink"><BookOpenText size={22} strokeWidth={1.75} aria-hidden /></span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-[15px] font-semibold">Read my thesis</span>
+            <span className="block text-[13px] text-sub">Every paragraph explained. Even like you're 10.</span>
+          </span>
+          <ChevronDown size={18} className="-rotate-90 text-sub" aria-hidden />
+        </button>
         {points.length > 0 && (
           <section className="card p-4 md:p-5">
             <h2 className="mb-3 flex items-center text-[15px] font-semibold">Your study in {points.length} point{points.length === 1 ? '' : 's'}<Hint text="The main idea of your paper. Know these by heart." /></h2>
@@ -92,10 +102,11 @@ function SummaryTab({ pack, scores, read, go, setTab }) {
           <section className="card p-4 md:p-5">
             <div className="flex items-center justify-between gap-2">
               <h2 className="flex items-center gap-2 text-[15px] font-semibold"><Mic size={17} strokeWidth={1.75} className="text-brand" aria-hidden />Opening line<Hint text="How to start your defense. Practice saying it out loud." /></h2>
-              <button className="btn-ghost !h-8 !px-3 !text-[12px]" onClick={() => speak(pack.elevatorPitch)}><Volume2 size={15} /> Listen</button>
+              <button className="btn-ghost !h-8 !px-3 !text-[12px]" onClick={() => speak(speakable(pack.elevatorPitch, profile))}><Volume2 size={15} /> Listen</button>
             </div>
-            <p className="mt-2 text-[14px] leading-relaxed text-ink-2">{script || !pitchLong ? pack.elevatorPitch : `${pitchFirst} ...`}</p>
+            <p className="mt-2 text-[14px] leading-relaxed text-ink-2"><OpeningText text={script || !pitchLong ? pack.elevatorPitch : `${pitchFirst} ...`} profile={profile} /></p>
             {pitchLong && <button className="mt-1 text-[13px] font-semibold text-brand" onClick={() => setScript(!script)}>{script ? 'Show less' : 'Show full script'}</button>}
+            <MissingProfile text={pack.elevatorPitch} profile={profile} go={go} />
           </section>
         )}
 

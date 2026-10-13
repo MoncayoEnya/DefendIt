@@ -73,7 +73,7 @@ export default function Leaderboard({ state, update, cloud, go }) {
           <button className="btn-primary shrink-0">Join</button>
         </form>
         {err && <div className="mt-3"><Notice tone="red" icon={AlertCircle}>{err}</Notice></div>}
-        {!state.profile.name && <p className="mt-3 text-[12px] text-sub">Tip: set your name in the profile menu so classmates recognize you.</p>}
+        {!state.profile.name && <p className="mt-3 text-[12px] text-sub">Tip: <button className="font-semibold text-brand" onClick={() => go('profile')}>add your name</button> so classmates recognize you.</p>}
       </div>
     )
   }

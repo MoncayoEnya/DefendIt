@@ -85,3 +85,21 @@ Notes:
   test users can sign in. Click **Publish app** when you are ready for classmates.
 - Google sign-in works in the browser and the installed web app (PWABuilder route).
   In the Capacitor Android app, use email sign-in, or add the deep-link setup from the Supabase docs.
+
+
+## Google sign-in in the Android app
+
+The Android app returns from Google through the app link `com.defendit.app://auth`.
+In Supabase go to **Authentication > URL Configuration > Redirect URLs** and add:
+
+```
+com.defendit.app://auth
+```
+
+Optional: put your website in `.env` so sign-up and password reset emails sent from the app open the website:
+
+```
+VITE_SITE_URL=https://your-app.vercel.app
+```
+
+After changing anything here, rebuild the app: `npm run build`, `npx cap sync android`, then build the APK again in Android Studio.

@@ -93,7 +93,7 @@ Read the paper below and return ONLY JSON with this exact shape:
 {
   "title": string,                       // the paper's title
   "overview": string,                    // 3-4 plain-English sentences: problem, method, main finding
-  "elevatorPitch": string,               // a 45-second spoken opening the student can practice, first person
+  "elevatorPitch": string,               // a 45-second spoken opening the student can practice, first person. Where the speaker's name goes write exactly [Your Name]; for groupmates [Groupmates]; for the school [School]; never invent names
   "sections": [ { "title": string, "summary": string, "keyPoints": [string] } ],  // 4-8 sections following the paper's chapters, 2-4 key points each, simple words
   "terms": [ { "term": string, "definition": string, "chapter": number } ],   // chapter = index in "sections" (0-based) where the term matters most. 12-20 important terms/concepts/statistics FROM THIS PAPER, definitions max 25 words, as used in this paper
   "questions": [ { "question": string, "type": string, "idealPoints": [string], "chapter": number } ], // chapter = index in "sections" (0-based) the question is about. 15-20 realistic, tough panel questions specific to THIS paper (methodology, sampling, validity, statistics, results, limitations, significance, novelty, "what if" questions). type = short category. idealPoints = 2-4 things a strong answer must mention, using facts from the paper.
@@ -167,4 +167,34 @@ Give practical, specific feedback. Return ONLY JSON:
   "likelyQuestions": [string]              // 3 questions the panel may ask based on these slides
 }`
   return gemini(settings, p, { temperature: 0.4 })
+}
+
+// "Read my thesis": what each paragraph means, in plain words and for a 10-year-old.
+export async function explainParagraphs(settings, pack, paras) {
+  const list = paras.map((p, i) => `[${i}] ${p.slice(0, 2500)}`).join('\n\n')
+  const p = `You help a student understand their own thesis "${pack.title}".
+For EACH numbered paragraph below, return ONLY JSON:
+{ "items": [ { "i": number, "meaning": string, "kid": string } ] }
+- meaning: what the paragraph says and why it is there, in 1-2 short sentences, simple everyday words, max 40 words.
+- kid: explain it to a 10-year-old in 1-2 sentences with a simple everyday example, max 40 words. No jargon.
+Keep the same order. Do not add facts that are not in the paragraph.
+
+PARAGRAPHS:
+${list}`
+  const out = await gemini(settings, p, { temperature: 0.3 })
+  return (out.items || []).map((x, k) => ({ i: Number.isInteger(x.i) ? x.i : k, meaning: x.meaning || '', kid: x.kid || '' }))
+}
+
+export async function explainWhole(settings, pack) {
+  const context = JSON.stringify({ title: pack.title, overview: pack.overview, chapters: pack.sections.map((s) => ({ title: s.title, summary: s.summary })) }).slice(0, 12000)
+  const p = `Explain this thesis to a curious 10-year-old so that the student who wrote it finally "gets" their own study.
+Thesis (JSON): ${context}
+Return ONLY JSON:
+{
+  "oneLine": string,       // the whole study in one short sentence a child understands, max 20 words
+  "story": [string],       // 4-6 very short paragraphs (max 35 words each): the problem, what they wanted to find out, what they did, what they found, why it matters. Simple words, friendly, use "they" for the researchers
+  "example": string,       // one everyday comparison (like school, games, cooking or sports) that makes the main idea click, max 40 words
+  "words": [ { "word": string, "simple": string } ]  // 3-5 hard words from the study and their kid-friendly meaning, max 15 words each
+}`
+  return gemini(settings, p, { temperature: 0.5 })
 }

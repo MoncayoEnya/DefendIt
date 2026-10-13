@@ -1,6 +1,8 @@
 // Accounts, cloud saving and the class leaderboard, using Supabase's free plan.
 // Setup: see docs/CLOUD_SETUP.md. Without the two keys in .env, the app simply stays offline.
 
+import { Capacitor } from '@capacitor/core'
+
 const URL = import.meta.env.VITE_SUPABASE_URL
 // Supabase calls this the "anon" key in older projects and the "publishable" key in newer ones; both work.
 const KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env.VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY
@@ -20,7 +22,7 @@ export function getClient() {
 // ---------- auth ----------
 export async function signUp(email, password) {
   const sb = await getClient()
-  const { data, error } = await sb.auth.signUp({ email, password, options: { emailRedirectTo: location.origin } })
+  const { data, error } = await sb.auth.signUp({ email, password, options: { emailRedirectTo: homeUrl() } })
   if (error) throw error
   return data
 }
@@ -32,16 +34,55 @@ export async function signIn(email, password) {
   return data
 }
 
+// The Android app runs at https://localhost inside the phone, so Google cannot send people back there.
+// Instead it returns to this app link, which Android opens in DefendIt (see AndroidManifest.xml).
+export const APP_LINK = 'com.defendit.app://auth'
+const native = Capacitor.isNativePlatform()
+// Web address used in emails sent from the app (sign-up confirm, password reset)
+const SITE = (import.meta.env.VITE_SITE_URL || '').replace(/\/$/, '')
+const homeUrl = () => (native ? SITE || APP_LINK : location.origin)
+
+// Called once at start in the Android app: finishes Google sign-in when the app link opens the app.
+let listening = false
+export async function listenForAppLink(onDone) {
+  if (!native || listening || !cloudEnabled) return
+  listening = true
+  const [{ App }, { Browser }] = await Promise.all([import('@capacitor/app'), import('@capacitor/browser')])
+  App.addListener('appUrlOpen', async ({ url }) => {
+    if (!url?.startsWith(APP_LINK)) return
+    Browser.close().catch(() => {})
+    const params = new globalThis.URL(url.replace(APP_LINK, 'https://x/auth'))
+    const code = params.searchParams.get('code')
+    const err = params.searchParams.get('error_description')
+    try {
+      if (err) throw new Error(err)
+      if (code) {
+        const sb = await getClient()
+        const { error } = await sb.auth.exchangeCodeForSession(code)
+        if (error) throw error
+      }
+      onDone?.(null)
+    } catch (e) { onDone?.(e) }
+  })
+}
+
 // Google sign-in (turn on the Google provider in Supabase first, see docs/CLOUD_SETUP.md)
 export async function signInWithGoogle() {
   const sb = await getClient()
   const { data, error } = await sb.auth.signInWithOAuth({
     provider: 'google',
-    // Return to the site's main address (no #page part). Supabase only accepts addresses listed under
-    // Authentication > URL Configuration; anything else falls back to the Site URL (often localhost).
-    options: { redirectTo: `${location.origin}/`, skipBrowserRedirect: true },
+    // Website: return to the site's main address (no #page part). Android app: return through the app link.
+    // Supabase only accepts addresses listed under Authentication > URL Configuration > Redirect URLs;
+    // anything else falls back to the Site URL (often localhost).
+    options: { redirectTo: native ? APP_LINK : `${location.origin}/`, skipBrowserRedirect: true },
   })
   if (error) throw error
+  try { sessionStorage.setItem('defendit:afterAuth', 'account') } catch { /* private mode */ }
+  if (native) {
+    const { Browser } = await import('@capacitor/browser')
+    await Browser.open({ url: data.url })
+    return
+  }
   // Check first, so a disabled provider shows a friendly message instead of a raw error page.
   try {
     const check = await fetch(data.url, { redirect: 'manual' })
@@ -59,7 +100,7 @@ export async function signInWithGoogle() {
 
 export async function resetPassword(email) {
   const sb = await getClient()
-  const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin })
+  const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: homeUrl() })
   if (error) throw error
 }
 

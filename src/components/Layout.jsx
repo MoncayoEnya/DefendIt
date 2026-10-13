@@ -1,20 +1,20 @@
 import { useEffect, useRef, useState } from 'react'
-import { Award, BookOpen, Menu, Moon, Sun, Check, ChevronDown, Cloud, CloudOff, House, Layers, ListOrdered, LogOut, MoreHorizontal, Pencil, Settings, ShieldCheck, Trophy, Users } from 'lucide-react'
+import { Award, BookOpen, Menu, Moon, Sun, Check, ChevronDown, Cloud, CloudOff, House, Layers, ListOrdered, LogOut, MoreHorizontal, UserRound, Settings, ShieldCheck, Trophy, Users } from 'lucide-react'
 import { levelInfo } from '../lib/storage.js'
 
 const DESKTOP_NAV = [
   { id: 'overview', label: 'Overview', match: ['overview', 'plan'] },
-  { id: 'guide', label: 'Study guide', match: ['guide', 'reviewer'] },
+  { id: 'guide', label: 'Study guide', match: ['guide', 'reviewer', 'read'] },
   { id: 'practice', label: 'Practice', match: ['practice', 'cards', 'typing', 'panel', 'match', 'group', 'leaderboard', 'daily', 'explain', 'slides'] },
   { id: 'confidence', label: 'Confidence', match: ['confidence'] },
 ]
 
 const MOBILE_NAV = [
   { id: 'overview', label: 'Overview', icon: House, match: ['overview'] },
-  { id: 'guide', label: 'Guide', icon: BookOpen, match: ['guide', 'reviewer'] },
+  { id: 'guide', label: 'Guide', icon: BookOpen, match: ['guide', 'reviewer', 'read'] },
   { id: 'cards', label: 'Cards', icon: Layers, match: ['cards'] },
   { id: 'panel', label: 'Panel', icon: Users, match: ['panel'] },
-  { id: 'more', label: 'More', icon: MoreHorizontal, match: ['more', 'confidence', 'settings', 'practice', 'typing', 'match', 'group', 'badges', 'account', 'leaderboard', 'daily', 'explain', 'slides', 'plan', 'survey', 'evaluation'] },
+  { id: 'more', label: 'More', icon: MoreHorizontal, match: ['more', 'confidence', 'settings', 'practice', 'typing', 'match', 'group', 'badges', 'account', 'leaderboard', 'daily', 'explain', 'slides', 'plan', 'survey', 'evaluation', 'profile'] },
 ]
 
 function Brand({ onClick }) {
@@ -26,8 +26,9 @@ function Brand({ onClick }) {
   )
 }
 
-export function Avatar({ name, size = 32 }) {
+export function Avatar({ name, photo, size = 32 }) {
   const initials = (name || 'S').trim().split(/\s+/).map((w) => w[0]).slice(0, 2).join('').toUpperCase()
+  if (photo) return <img src={photo} alt="" referrerPolicy="no-referrer" className="shrink-0 rounded-full object-cover" style={{ width: size, height: size }} onError={(e) => { e.currentTarget.style.display = 'none' }} />
   return (
     <span className="grid shrink-0 place-items-center rounded-full bg-brand-soft font-semibold text-brand" style={{ width: size, height: size, fontSize: size * 0.4 }} aria-hidden>
       {initials}
@@ -37,8 +38,6 @@ export function Avatar({ name, size = 32 }) {
 
 function ProfileMenu({ state, update, go, compact, cloud }) {
   const [open, setOpen] = useState(false)
-  const [editing, setEditing] = useState(false)
-  const [name, setName] = useState(state.profile.name || '')
   const ref = useRef()
   const lv = levelInfo(state.profile.xp)
   const display = state.profile.name || 'Student'
@@ -52,12 +51,6 @@ function ProfileMenu({ state, update, go, compact, cloud }) {
     return () => { document.removeEventListener('mousedown', close); document.removeEventListener('keydown', esc) }
   }, [open])
 
-  function saveName(e) {
-    e.preventDefault()
-    update((s) => ({ ...s, profile: { ...s.profile, name: name.trim() } }))
-    setEditing(false)
-  }
-
   return (
     <div className="relative" ref={ref}>
       {compact ? (
@@ -66,7 +59,7 @@ function ProfileMenu({ state, update, go, compact, cloud }) {
         </button>
       ) : (
         <button onClick={() => setOpen(!open)} aria-expanded={open} aria-haspopup="menu" className="flex h-10 items-center gap-2 rounded-md pl-1 pr-1.5 hover:bg-bg">
-          <Avatar name={display} size={32} />
+          <Avatar name={display} photo={state.profile.photo} size={32} />
           <span className="max-w-28 truncate text-[13px] font-medium">{display}</span>
           <ChevronDown size={15} className="text-sub" aria-hidden />
         </button>
@@ -74,19 +67,12 @@ function ProfileMenu({ state, update, go, compact, cloud }) {
       {open && (
         <div role="menu" className="fade-up absolute right-0 top-12 z-50 w-72 rounded-lg border border-line bg-card p-2 shadow-[0_8px_24px_rgba(21,27,34,.08)]">
           <div className="flex items-center gap-3 p-2">
-            <Avatar name={display} size={40} />
+            <Avatar name={display} photo={state.profile.photo} size={40} />
             <div className="min-w-0 flex-1">
-              {editing ? (
-                <form onSubmit={saveName} className="flex gap-1.5">
-                  <input autoFocus className="input !h-8 !text-[13px]" value={name} onChange={(e) => setName(e.target.value)} placeholder="Your first name" aria-label="Your name" />
-                  <button className="btn-primary !h-8 !px-2" aria-label="Save name"><Check size={15} /></button>
-                </form>
-              ) : (
-                <>
-                  <div className="truncate text-[14px] font-semibold">{display}</div>
-                  <div className="text-[12px] text-sub">Level {lv.level} · {lv.name}</div>
-                </>
-              )}
+              <button className="block w-full text-left" onClick={() => { go('profile'); setOpen(false) }}>
+                <div className="truncate text-[14px] font-semibold">{display}</div>
+                <div className="text-[12px] text-sub">Level {lv.level} · {lv.name}</div>
+              </button>
             </div>
           </div>
           <div className="px-2 pb-2">
@@ -94,7 +80,7 @@ function ProfileMenu({ state, update, go, compact, cloud }) {
             <div className="h-1.5 overflow-hidden rounded-full bg-track"><div className="h-full rounded-full bg-brand-2" style={{ width: `${lv.pct * 100}%` }} /></div>
           </div>
           <div className="border-t border-line pt-1">
-            <MenuItem icon={Pencil} onClick={() => setEditing(true)}>Change name</MenuItem>
+            <MenuItem icon={UserRound} onClick={() => { go('profile'); setOpen(false) }}>Edit profile</MenuItem>
             <MenuItem icon={Award} onClick={() => { go('badges'); setOpen(false) }}>Badges · {Object.keys(state.profile.badges || {}).length} earned</MenuItem>
             <MenuItem icon={ListOrdered} onClick={() => { go('leaderboard'); setOpen(false) }}>Class leaderboard</MenuItem>
             <MenuItem icon={cloud?.user ? Cloud : CloudOff} onClick={() => { go('account'); setOpen(false) }}>{cloud?.user ? `Account · ${cloud.user.email}` : 'Sign in to back up progress'}</MenuItem>

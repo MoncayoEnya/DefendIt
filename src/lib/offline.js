@@ -6,7 +6,7 @@ const STOP = new Set(`a about above after again against all also am an and any a
 // Words that are too general to be good "key terms" on their own.
 const GENERIC = new Set(`score scores studies study measured group groups test tests students student school schools participants significant difference increased higher lower findings conducted reported showed total number system systems approach process method methods information problem problems issue issues user users people person owner owners way ways time times part parts case cases example basis provide provides help helps important general specific purpose objective objectives scope limitation limitations significance background introduction chapter thesis paper project proposed developed development able`.split(/\s+/))
 
-const SECTION_PATTERNS = [
+export const SECTION_PATTERNS = [
   ['Introduction / Background', /^(chapter\s+(1|i|one)\b.*|introduction|background( of the (study|problem))?|rationale)$/i],
   ['Statement of the Problem', /^(statement of the problem|research questions?|problem statement)$/i],
   ['Objectives', /^(objectives?( of the study)?|general objective|specific objectives?|research objectives?)$/i],
@@ -30,7 +30,7 @@ export function isJunk(line) {
   return false
 }
 
-function isHeading(line) {
+export function isHeading(line) {
   const l = line.replace(/[:.]$/, '').trim()
   if (SECTION_PATTERNS.some(([, re]) => re.test(l))) return true
   if (l.length > 90 || /[.;,?!]$/.test(line.trim())) return false
