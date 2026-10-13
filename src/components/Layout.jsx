@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
-import { Award, BookOpen, Menu, Moon, Sun, Check, ChevronDown, Cloud, CloudOff, House, Layers, ListOrdered, LogOut, MoreHorizontal, UserRound, Settings, ShieldCheck, Trophy, Users } from 'lucide-react'
+import { Award, BookOpen, Menu, Moon, Sun, Check, ChevronDown, Cloud, CloudOff, House, Layers, ListOrdered, LogOut, MoreHorizontal, UserRound, Settings, Trophy, Users } from 'lucide-react'
+import { LogoMark } from './Logo.jsx'
+import ResetDialog from './ResetDialog.jsx'
 import { levelInfo } from '../lib/storage.js'
+import { useCountUp } from './ui.jsx'
 
 const DESKTOP_NAV = [
   { id: 'overview', label: 'Overview', match: ['overview', 'plan'] },
@@ -20,7 +23,7 @@ const MOBILE_NAV = [
 function Brand({ onClick }) {
   return (
     <button onClick={onClick} className="flex items-center gap-2" aria-label="DefendIt home">
-      <ShieldCheck size={24} strokeWidth={2} className="text-brand" aria-hidden />
+      <LogoMark size={26} />
       <span className="text-[17px] font-bold tracking-tight">DefendIt</span>
     </button>
   )
@@ -38,6 +41,7 @@ export function Avatar({ name, photo, size = 32 }) {
 
 function ProfileMenu({ state, update, go, compact, cloud }) {
   const [open, setOpen] = useState(false)
+  const [resetOpen, setResetOpen] = useState(false)
   const ref = useRef()
   const lv = levelInfo(state.profile.xp)
   const display = state.profile.name || 'Student'
@@ -53,6 +57,7 @@ function ProfileMenu({ state, update, go, compact, cloud }) {
 
   return (
     <div className="relative" ref={ref}>
+      {resetOpen && <ResetDialog user={cloud?.user} onClose={() => setResetOpen(false)} />}
       {compact ? (
         <button onClick={() => setOpen(!open)} aria-expanded={open} aria-haspopup="menu" aria-label="Open menu" className="grid h-10 w-10 place-items-center rounded-md text-ink hover:bg-bg">
           <Menu size={22} strokeWidth={1.75} aria-hidden />
@@ -89,7 +94,7 @@ function ProfileMenu({ state, update, go, compact, cloud }) {
               {document.documentElement.dataset.theme === 'dark' ? 'Light mode' : 'Dark mode'}
             </MenuItem>
             <MenuItem icon={Settings} onClick={() => { go('settings'); setOpen(false) }}>Settings and AI key</MenuItem>
-            <MenuItem icon={LogOut} danger onClick={() => confirm('Delete all progress, files and settings on this device?') && (localStorage.clear(), location.reload())}>Reset all data</MenuItem>
+            <MenuItem icon={LogOut} danger onClick={() => { setResetOpen(true); setOpen(false) }}>Reset all data</MenuItem>
           </div>
         </div>
       )}
@@ -127,7 +132,7 @@ export function DesktopHeader({ tab, go, state, update, cloud }) {
           })}
         </nav>
         <div className="flex flex-1 items-center justify-end gap-4">
-          <span className="text-[13px] font-semibold">{state.profile.xp} XP</span>
+          <XpCount xp={state.profile.xp} className="rounded-full px-2.5 py-1 text-[13px] font-semibold" />
           <span className="h-6 w-px bg-line" />
           <ProfileMenu state={state} update={update} go={go} cloud={cloud} />
         </div>
@@ -142,8 +147,8 @@ export function MobileHeader({ go, state, update, cloud }) {
       <div className="flex h-14 items-center justify-between px-4">
         <Brand onClick={() => go('overview')} />
         <div className="flex items-center gap-1.5">
-          <button onClick={() => go('badges')} className="h-8 rounded-full bg-brand-soft px-3 text-[13px] font-semibold text-brand" aria-label={`${state.profile.xp} XP, view badges`}>
-            {state.profile.xp} XP
+          <button onClick={() => go('badges')} className="rounded-full transition-transform active:scale-95" aria-label={`${state.profile.xp} XP, view badges`}>
+            <XpCount xp={state.profile.xp} className="block h-8 rounded-full bg-brand-soft px-3 text-[13px] font-semibold leading-8 text-brand" />
           </button>
           <ProfileMenu state={state} update={update} go={go} compact cloud={cloud} />
         </div>
@@ -160,9 +165,12 @@ export function BottomNavigation({ tab, go }) {
           const active = match.includes(tab)
           return (
             <button key={id} onClick={() => go(id)} aria-current={active ? 'page' : undefined}
-              className={`flex flex-col items-center justify-center gap-1 text-[11px] font-medium ${active ? 'text-brand' : 'text-sub'}`}>
-              <Icon size={21} strokeWidth={active ? 2 : 1.75} aria-hidden />
-              {label}
+              className={`flex flex-col items-center justify-center gap-1 text-[11px] font-medium transition-colors active:scale-95 ${active ? 'text-brand' : 'text-sub'}`}>
+              <span className="relative grid h-7 w-14 place-items-center">
+                {active && <span className="nav-pill absolute inset-0 rounded-full bg-brand-soft" aria-hidden />}
+                <Icon key={active ? 'on' : 'off'} size={21} strokeWidth={active ? 2.1 : 1.75} className={`relative ${active ? 'nav-bump' : ''}`} aria-hidden />
+              </span>
+              <span className={active ? 'font-semibold' : ''}>{label}</span>
             </button>
           )
         })}
@@ -174,9 +182,18 @@ export function BottomNavigation({ tab, go }) {
 export function Toast({ toast, go }) {
   if (!toast) return null
   return (
-    <div role="status" data-toast onClick={() => toast.to && go?.(toast.to)} className={`${toast.to ? 'cursor-pointer ' : ''}print-hide fade-up fixed left-1/2 top-[72px] z-50 flex max-w-[92vw] -translate-x-1/2 items-center gap-2 rounded-md border border-brand-2/30 bg-card px-4 py-2.5 text-[13px] font-semibold text-brand shadow-[0_8px_24px_rgba(21,27,34,.10)]`}>
+    <div role="status" data-toast onClick={() => toast.to && go?.(toast.to)} className={`${toast.to ? 'cursor-pointer ' : ''}print-hide toast-in fixed left-1/2 top-[72px] z-50 flex max-w-[92vw] -translate-x-1/2 items-center gap-2 rounded-md border border-brand-2/30 bg-card px-4 py-2.5 text-[13px] font-semibold text-brand shadow-[0_8px_24px_rgba(21,27,34,.10)]`}>
       {toast.to === 'badges' ? <Award size={16} aria-hidden /> : toast.big ? <Trophy size={16} aria-hidden /> : <Check size={16} aria-hidden />}
       {toast.text}
     </div>
   )
+}
+
+// XP that counts up and glows when you earn points
+function XpCount({ xp, className }) {
+  const shown = useCountUp(xp, 800)
+  const [glow, setGlow] = useState(0)
+  const last = useRef(xp)
+  useEffect(() => { if (xp > last.current) setGlow((g) => g + 1); last.current = xp }, [xp])
+  return <span key={glow} className={`tabular-nums ${glow ? 'xp-glow' : ''} ${className}`}>{shown.toLocaleString()} XP</span>
 }

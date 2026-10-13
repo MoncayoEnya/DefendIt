@@ -1,6 +1,6 @@
 import { Fragment, useCallback, useEffect, useState } from 'react'
 import { AlertCircle, ClipboardList, Copy, Download, Link2, Loader2, LogIn, Plus, Printer, QrCode, RefreshCw, Smartphone, Trash2 } from 'lucide-react'
-import { CircularProgress, Hint, IconBox, Notice, PageHeader, ProgressBar, SectionTitle } from '../components/ui.jsx'
+import { CircularProgress, Hint, IconBox, Notice, PageHeader, ProgressBar, SectionTitle, centerOnTap } from '../components/ui.jsx'
 import { cloudEnabled, createSurvey, deleteSurvey, fetchSurveyResponses, mySurveys } from '../lib/cloud.js'
 import { GROUPS, SUS, interpret, makeCode, summarize, toCsv } from '../lib/survey.js'
 
@@ -108,7 +108,7 @@ export default function Evaluation({ state, update, cloud, go }) {
         {err && <div className="mt-4"><Notice tone="red" icon={AlertCircle}>{err}</Notice></div>}
 
         <SectionTitle>Results</SectionTitle>
-        <div className="-mx-4 mb-3 flex gap-1.5 overflow-x-auto px-4 md:mx-0 md:flex-wrap md:px-0">
+        <div className="swipe-row -mx-4 mb-3 flex gap-1.5 px-4 md:mx-0 md:flex-wrap md:px-0" onClickCapture={centerOnTap}>
           {surveys.map((s) => (
             <button key={s.code} onClick={() => setSource(s.code)} className={`h-9 shrink-0 rounded-full border px-3 text-[12px] font-medium ${source === s.code ? 'border-brand bg-brand-soft text-brand' : 'border-line bg-card text-sub'}`}>{s.code}</button>
           ))}

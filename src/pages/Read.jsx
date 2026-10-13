@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { AlertCircle, Baby, BookOpenText, ChevronDown, FileUp, Lightbulb, Loader2, Sparkles, Volume2, WandSparkles } from 'lucide-react'
-import { BackLink, Notice } from '../components/ui.jsx'
+import { BackLink, Notice, centerOnTap } from '../components/ui.jsx'
 import { explainParagraphs, explainWhole, hasAI } from '../lib/ai.js'
 import { extractText } from '../lib/extract.js'
 import { demoText, offlineMeaning, toReader } from '../lib/reader.js'
@@ -114,7 +114,7 @@ export default function Read({ state, pack, go, addXP, track }) {
         <Notice tone="yellow" icon={AlertCircle}>We could not find paragraphs in this file. Scanned pages with unclear text are hard to split.</Notice>
       ) : (
         <>
-          <div className="-mx-4 mb-3 overflow-x-auto px-4 md:mx-0 md:px-0">
+          <div className="swipe-row -mx-4 mb-3 px-4 md:mx-0 md:px-0" onClickCapture={centerOnTap}>
             <div className="flex gap-2">
               {chapters.map((c, i) => (
                 <button key={i} onClick={() => { setChapter(i); window.scrollTo({ top: 0 }) }}

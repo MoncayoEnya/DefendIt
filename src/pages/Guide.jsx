@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { MissingProfile, OpeningText } from '../components/Opening.jsx'
 import { speakable } from '../lib/profile.js'
 import { AlertTriangle, BookOpen, BookOpenText, Check, ChevronDown, CircleHelp, FileText, Layers, ListChecks, Mic, Printer, Search, Users, Volume2 } from 'lucide-react'
-import { CircularProgress, Hint, ProgressBar, Tabs } from '../components/ui.jsx'
+import { CircularProgress, Hint, ProgressBar, Tabs, centerOnTap } from '../components/ui.jsx'
 import { chapterScores, uiState } from '../lib/chapters.js'
 import { speak } from '../lib/voice.js'
 
@@ -257,7 +257,7 @@ function QuestionsTab({ pack, go }) {
   return (
     <div>
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <div className="-mx-4 flex gap-1.5 overflow-x-auto px-4 md:mx-0 md:flex-wrap md:px-0">
+        <div className="swipe-row -mx-4 flex gap-1.5 px-4 md:mx-0 md:flex-wrap md:px-0" onClickCapture={centerOnTap}>
           {types.map((t) => (
             <button key={t} onClick={() => setType(t)} className={`h-8 shrink-0 rounded-full border px-3 text-[12px] font-medium ${type === t ? 'border-brand bg-brand-soft text-brand' : 'border-line bg-card text-sub hover:text-ink'}`}>{t}</button>
           ))}

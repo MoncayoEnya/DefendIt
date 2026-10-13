@@ -237,3 +237,13 @@ export async function deleteSurvey(code) {
   const { error } = await sb.from('surveys').delete().eq('code', code)
   if (error) throw error
 }
+
+// Deletes your cloud backup and your leaderboard rows (for "Delete everything").
+export async function deleteCloudData(userId) {
+  const sb = await getClient()
+  if (!sb || !userId) return
+  const a = await sb.from('user_data').delete().eq('user_id', userId)
+  if (a.error) throw a.error
+  await sb.from('leaderboard').delete().eq('user_id', userId)
+  await sb.auth.signOut()
+}

@@ -304,7 +304,7 @@ export default function App() {
             </div>
           </div>
         ) : (
-          <Page key={tab} {...props} />
+          <div key={tab} className="page-enter"><Page {...props} /></div>
         )}
       </main>
 

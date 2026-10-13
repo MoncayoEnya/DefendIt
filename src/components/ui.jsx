@@ -1,30 +1,67 @@
 import { useEffect, useRef, useState } from 'react'
-import { ChevronRight, Info } from 'lucide-react'
+import {
+  Award, CalendarDays, ChevronRight, ClipboardList, Cloud, Info, Keyboard, LayoutGrid, Layers, Link2, ListOrdered, MessageSquareText,
+  Presentation, Printer, Settings, Swords, Timer, UserRound, Users, UsersRound, Wind,
+} from 'lucide-react'
+
+const calm = () => typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches
+
+// Counts from the last shown number to the new one, so progress feels earned.
+export function useCountUp(target, ms = 700) {
+  const [shown, setShown] = useState(calm() ? target : 0)
+  const from = useRef(shown)
+  useEffect(() => {
+    if (calm()) { setShown(target); return }
+    const start = performance.now()
+    const a = from.current
+    let raf
+    const step = (t) => {
+      const k = Math.min(1, (t - start) / ms)
+      const v = Math.round(a + (target - a) * (1 - (1 - k) ** 3))
+      setShown(v)
+      from.current = v
+      if (k < 1) raf = requestAnimationFrame(step)
+    }
+    raf = requestAnimationFrame(step)
+    return () => cancelAnimationFrame(raf)
+  }, [target, ms])
+  return shown
+}
+
+// Value that starts at 0 and moves to the real number right after the first paint.
+function useGrow(value) {
+  const [v, setV] = useState(calm() ? value : 0)
+  useEffect(() => { const id = requestAnimationFrame(() => setV(value)); return () => cancelAnimationFrame(id) }, [value])
+  return v
+}
 
 export function CircularProgress({ value, size = 128, stroke = 12, label }) {
   const r = (size - stroke) / 2
   const c = 2 * Math.PI * r
+  const grown = useGrow(value)
+  const num = useCountUp(value, 900)
   return (
     <div className="relative shrink-0" style={{ width: size, height: size }} role="img" aria-label={label || `${value}% complete`}>
       <svg width={size} height={size} className="-rotate-90">
         <circle cx={size / 2} cy={size / 2} r={r} stroke="var(--color-track)" strokeWidth={stroke} fill="none" />
         <circle
           cx={size / 2} cy={size / 2} r={r} stroke="var(--color-brand)" strokeWidth={stroke} fill="none"
-          strokeLinecap="round" strokeDasharray={c} strokeDashoffset={c * (1 - Math.min(value, 100) / 100)}
-          style={{ transition: 'stroke-dashoffset .6s ease' }}
+          strokeLinecap="round" strokeDasharray={c} strokeDashoffset={c * (1 - Math.min(grown, 100) / 100)}
+          style={{ transition: 'stroke-dashoffset .9s cubic-bezier(.2,.7,.2,1)' }}
         />
       </svg>
       <div className="absolute inset-0 grid place-items-center">
-        <span className="font-bold tracking-tight" style={{ fontSize: size * 0.22 }}>{value}%</span>
+        <span className="font-bold tracking-tight tabular-nums" style={{ fontSize: size * 0.22 }}>{num}%</span>
       </div>
     </div>
   )
 }
 
 export function ProgressBar({ value, color = 'bg-brand-2', className = 'h-1.5' }) {
+  const grown = useGrow(value)
   return (
     <div className={`w-full overflow-hidden rounded-full bg-track ${className}`}>
-      <div className={`h-full rounded-full ${color} transition-all duration-500`} style={{ width: `${Math.max(0, Math.min(value, 100))}%` }} />
+      <div className={`h-full rounded-full ${color}`} style={{ width: `${Math.max(0, Math.min(grown, 100))}%`, transition: 'width .8s cubic-bezier(.2,.7,.2,1)' }} />
     </div>
   )
 }
@@ -40,15 +77,72 @@ export function MetricRow({ label, value, color, compact }) {
   )
 }
 
-export function PageHeader({ eyebrow, title, desc, right }) {
+// Every part of the app has its own icon, color and background pattern:
+// Learn = blue dots, Practice = green rings, Prepare = yellow steps, Panel = red rings, You = soft circles.
+const AREAS = {
+  learn: { tone: 'bg-blue-soft text-blue', motif: 'dots' },
+  practice: { tone: 'bg-brand-soft text-brand', motif: 'rings' },
+  panel: { tone: 'bg-red-soft text-red-ink', motif: 'rings' },
+  prepare: { tone: 'bg-yellow-soft text-yellow-ink', motif: 'steps' },
+  you: { tone: 'bg-brand-soft text-brand', motif: 'circles' },
+  plain: { tone: 'bg-bg text-ink-2', motif: null },
+}
+const PAGE_LOOK = [
+  [/flashcard/i, Layers, 'learn'], [/match/i, Link2, 'learn'], [/explain/i, MessageSquareText, 'learn'], [/reviewer/i, Printer, 'learn'],
+  [/typing/i, Keyboard, 'practice'], [/^practice$/i, Swords, 'practice'], [/group/i, UsersRound, 'practice'], [/daily/i, Timer, 'practice'],
+  [/panel/i, Users, 'panel'],
+  [/plan|countdown/i, CalendarDays, 'prepare'], [/slide/i, Presentation, 'prepare'], [/confidence/i, Wind, 'prepare'], [/evaluation/i, ClipboardList, 'prepare'],
+  [/badge/i, Award, 'you'], [/leaderboard/i, ListOrdered, 'you'], [/account/i, Cloud, 'you'], [/profile/i, UserRound, 'you'],
+  [/settings/i, Settings, 'plain'], [/more/i, LayoutGrid, 'plain'],
+]
+
+function Motif({ kind }) {
+  if (!kind) return null
+  const common = 'motif pointer-events-none absolute -right-20 -top-6 h-[150px] w-[220px] opacity-40 [mask-image:linear-gradient(to_left,#000_35%,transparent_85%)] sm:-right-6 md:right-0 md:opacity-50'
+  if (kind === 'dots') return (
+    <svg className={common} viewBox="0 0 220 150" aria-hidden>
+      {Array.from({ length: 7 }, (_, r) => Array.from({ length: 10 }, (_, c) => (
+        <circle key={`${r}-${c}`} cx={14 + c * 22} cy={12 + r * 22} r={2.2} fill="currentColor" opacity={(c + r) / 20 + 0.08} />
+      )))}
+    </svg>
+  )
+  if (kind === 'rings') return (
+    <svg className={common} viewBox="0 0 220 150" aria-hidden>
+      {[18, 38, 58, 78, 98].map((r, i) => <circle key={r} cx="170" cy="40" r={r} fill="none" stroke="currentColor" strokeWidth="1.5" opacity={0.5 - i * 0.08} />)}
+    </svg>
+  )
+  if (kind === 'steps') return (
+    <svg className={common} viewBox="0 0 220 150" aria-hidden>
+      {[0, 1, 2, 3, 4].map((i) => <rect key={i} x={70 + i * 30} y={110 - i * 22} width="24" height={22 + i * 22} rx="5" fill="currentColor" opacity={0.1 + i * 0.07} />)}
+    </svg>
+  )
   return (
-    <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
-      <div className="min-w-0">
-        {eyebrow && <p className="eyebrow mb-1.5">{eyebrow}</p>}
-        <h1 className="text-[22px] font-bold leading-tight tracking-tight md:text-[28px]">{title}</h1>
-        {desc && <p className="mt-1 max-w-2xl text-[13px] text-sub md:text-[14px]">{desc}</p>}
+    <svg className={common} viewBox="0 0 220 150" aria-hidden>
+      <circle cx="150" cy="50" r="46" fill="currentColor" opacity=".12" />
+      <circle cx="190" cy="90" r="34" fill="currentColor" opacity=".16" />
+      <circle cx="118" cy="98" r="22" fill="currentColor" opacity=".1" />
+    </svg>
+  )
+}
+
+export function PageHeader({ eyebrow, title, desc, right, icon }) {
+  const look = PAGE_LOOK.find(([re]) => re.test(eyebrow || ''))
+  const Icon = icon || look?.[1]
+  const area = AREAS[look?.[2] || 'plain']
+  return (
+    <div className="relative mb-5">
+      <div className={`absolute inset-0 overflow-hidden ${area.tone.split(' ').find((c) => c.startsWith('text-'))}`} aria-hidden><Motif kind={area.motif} /></div>
+      <div className="relative flex flex-wrap items-end justify-between gap-3">
+        <div className="flex min-w-0 items-start gap-3.5">
+          {Icon && <span className={`pop-in mt-0.5 grid h-11 w-11 shrink-0 place-items-center rounded-xl ${area.tone}`}><Icon size={22} strokeWidth={1.8} aria-hidden /></span>}
+          <div className="min-w-0">
+            {eyebrow && <p className="eyebrow mb-1">{eyebrow}</p>}
+            <h1 className="text-[22px] font-bold leading-tight tracking-tight md:text-[28px]">{title}</h1>
+            {desc && <p className="mt-1 max-w-2xl text-[13px] text-sub md:text-[14px]">{desc}</p>}
+          </div>
+        </div>
+        {right}
       </div>
-      {right}
     </div>
   )
 }
@@ -158,9 +252,20 @@ export function Hint({ text, align = 'left', label = 'What is this?' }) {
 }
 
 // Segmented tabs (scroll sideways on small phones).
+// Slides the tapped (or selected) item to the middle of a swipe row.
+export function centerInRow(el) {
+  const row = el?.closest('.swipe-row')
+  if (!row || row.scrollWidth <= row.clientWidth) return
+  const left = el.offsetLeft - (row.clientWidth - el.offsetWidth) / 2
+  row.scrollTo({ left: Math.max(0, left), behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' })
+}
+export const centerOnTap = (e) => centerInRow(e.target.closest('button'))
+
 export function Tabs({ tabs, value, onChange }) {
+  const ref = useRef()
+  useEffect(() => { centerInRow(ref.current?.querySelector('[aria-selected="true"]')) }, [value])
   return (
-    <div className="-mx-4 mb-4 overflow-x-auto px-4 md:mx-0 md:px-0" role="tablist">
+    <div ref={ref} className="swipe-row -mx-4 mb-4 px-4 md:mx-0 md:px-0" role="tablist">
       <div className="inline-flex min-w-full gap-1 rounded-lg border border-line bg-card p-1 md:min-w-0">
         {tabs.map(({ id, label, icon: Icon, count }) => {
           const on = value === id

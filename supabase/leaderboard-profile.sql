@@ -7,3 +7,6 @@ alter table public.leaderboard add column if not exists course text check (cours
 alter table public.leaderboard add column if not exists school text check (school is null or char_length(school) <= 80);
 alter table public.leaderboard add column if not exists full_name text check (full_name is null or char_length(full_name) <= 60);
 alter table public.leaderboard add column if not exists badge_ids text[] not null default '{}';
+
+-- tell Supabase about the new columns right away
+notify pgrst, 'reload schema';

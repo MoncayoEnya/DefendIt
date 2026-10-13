@@ -1,4 +1,4 @@
-import { AlertCircle, ArrowRight, CalendarDays, BookOpen, CheckCircle2, ChevronRight, FileText, FileUp, HeartPulse, Keyboard, Layers, Link2, Loader2, MessageSquareText, Plus, Timer, Users } from 'lucide-react'
+import { Sun, Moon, Sunrise, AlertCircle, ArrowRight, CalendarDays, BookOpen, CheckCircle2, ChevronRight, FileText, FileUp, HeartPulse, Keyboard, Layers, Link2, Loader2, MessageSquareText, Plus, Timer, Users } from 'lucide-react'
 import { CircularProgress, Checkbox, Hint, MetricRow, Notice, ProgressBar } from './ui.jsx'
 import { packProgress, readiness } from '../lib/progress.js'
 import { daysUntil, focusTasks, PHASES, todayPlan } from '../lib/plan.js'
@@ -8,7 +8,9 @@ import { uiState, weakestChapter } from '../lib/chapters.js'
 
 export function WelcomeSection({ name, mobile }) {
   const date = new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }).toUpperCase()
-  const greet = name ? `Make today count, ${name}.` : 'Make today count.'
+  const h = new Date().getHours()
+  const [part, TimeIcon] = h < 12 ? ['Good morning', Sunrise] : h < 18 ? ['Good afternoon', Sun] : ['Good evening', Moon]
+  const greet = `${part}${name ? `, ${name}` : ''}. Make today count.`
   return (
     <section className="flex items-start justify-between gap-4">
       <div>
@@ -16,7 +18,7 @@ export function WelcomeSection({ name, mobile }) {
         <h1 className="text-[23px] font-bold leading-tight tracking-tight md:text-[30px]">
           {mobile ? 'Walk in ready.' : 'A little practice. A lot more confidence.'}
         </h1>
-        <p className="mt-1 text-[13px] text-sub md:text-[14px]">{greet}</p>
+        <p className="mt-1 flex items-center gap-1.5 text-[13px] text-sub md:text-[14px]"><TimeIcon size={15} className="pop-in shrink-0 text-yellow-ink" aria-hidden />{greet}</p>
       </div>
       {!mobile && <p className="eyebrow shrink-0 pt-0.5 !text-ink">{date}</p>}
     </section>

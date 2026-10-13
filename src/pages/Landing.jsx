@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import {
   ArrowRight, BookOpen, BookOpenText, Brain, CalendarDays, ClipboardList, Cloud, FileCheck2, FileText, Flame, Layers,
-  MessageSquareText, Mic, MonitorSmartphone, Moon, Plus, Printer, ScanText, ShieldCheck, Target, Trophy, UserRound, Users, WifiOff, Wind,
+  MessageSquareText, Mic, MonitorSmartphone, Moon, Plus, Printer, ScanText, Target, Trophy, UserRound, Users, WifiOff, Wind,
 } from 'lucide-react'
+import { LogoMark } from '../components/Logo.jsx'
 import photo from '../assets/landing-study.webp'
 import photoMobile from '../assets/landing-study-m.webp'
 
@@ -94,7 +95,7 @@ export default function Landing({ start, sample }) {
       <header className="sticky top-0 z-30 border-b border-line/80 bg-white/90 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-[1180px] items-center justify-between px-4 md:px-6">
           <a href="#welcome" className="flex items-center gap-2 text-[17px] font-bold tracking-tight text-ink" aria-label="DefendIt home">
-            <ShieldCheck size={24} strokeWidth={2} className="text-brand" aria-hidden /> DefendIt
+            <LogoMark size={28} /> DefendIt
           </a>
           <nav className="flex items-center gap-1" aria-label="Page sections">
             <button className="hidden h-10 rounded-md px-3 text-[14px] font-medium text-ink-2 hover:bg-bg md:block" onClick={() => jump('features')}>Features</button>
@@ -260,7 +261,7 @@ export default function Landing({ start, sample }) {
 
       <footer className="border-t border-line bg-bg">
         <div className="mx-auto flex max-w-[1180px] flex-col gap-3 px-4 py-8 text-[13px] text-sub md:flex-row md:items-center md:justify-between md:px-6">
-          <span className="flex items-center gap-2 font-semibold text-ink"><ShieldCheck size={18} className="text-brand" aria-hidden /> DefendIt</span>
+          <span className="flex items-center gap-2 font-semibold text-ink"><LogoMark size={20} /> DefendIt</span>
           <p>Free thesis defense practice, made for students.</p>
           <button className="self-start font-semibold text-brand hover:underline md:self-auto" onClick={start}>Open the app</button>
         </div>
