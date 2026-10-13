@@ -16,7 +16,7 @@ export default function Account({ cloud, go }) {
         <PageHeader eyebrow="Account" title="Cloud saving is not set up yet" desc="Your progress is saved on this device. To sign in and sync across phones and computers, the app owner needs to connect a free Supabase project." />
         <section className="card flex gap-3 p-5">
           <IconBox icon={CloudOff} tone="yellow" />
-          <div className="text-[13px] text-[#2b343d]">
+          <div className="text-[13px] text-ink-2">
             <p>Follow <b>docs/CLOUD_SETUP.md</b> in the project folder. It takes about 10 minutes:</p>
             <ol className="mt-2 list-decimal space-y-1 pl-5">
               <li>Create a free project at supabase.com.</li>

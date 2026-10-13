@@ -1,5 +1,5 @@
-import { AlertCircle, CalendarDays, BookOpen, ChevronRight, FileText, FileUp, Keyboard, Layers, Loader2, Users } from 'lucide-react'
-import { CircularProgress, Checkbox, MetricRow, Notice } from './ui.jsx'
+import { AlertCircle, ArrowRight, CalendarDays, BookOpen, CheckCircle2, ChevronRight, FileText, FileUp, HeartPulse, Keyboard, Layers, Link2, Loader2, MessageSquareText, Plus, Timer, Users } from 'lucide-react'
+import { CircularProgress, Checkbox, Hint, MetricRow, Notice, ProgressBar } from './ui.jsx'
 import { packProgress, readiness } from '../lib/progress.js'
 import { daysUntil, focusTasks, PHASES, todayPlan } from '../lib/plan.js'
 import { metricValue, taskDone } from '../lib/activity.js'
@@ -26,7 +26,7 @@ export function WelcomeSection({ name, mobile }) {
 export function ThesisUploadCard({ uploader, hasPacks, hasDemo, mobile }) {
   const { pick, loadDemo, busy, error } = uploader
   const title = hasPacks ? 'Add another thesis' : 'Start with your thesis'
-  const desc = hasPacks ? 'Upload a new version or another paper to practice with.' : 'Turn your research into your next practice session.'
+  const desc = 'PDF, Word or a photo of your pages'
 
   if (busy) {
     return (
@@ -53,7 +53,7 @@ export function ThesisUploadCard({ uploader, hasPacks, hasDemo, mobile }) {
           {!hasDemo && <button className="mt-1 h-10 w-full text-[13px] font-semibold text-brand" onClick={loadDemo}>Use sample thesis</button>}
         </div>
       ) : (
-        <div className="flex min-h-[140px] flex-col items-center justify-center rounded-lg border border-dashed border-[#cdd6dc] bg-white px-6 py-5 text-center">
+        <div className="flex min-h-[140px] flex-col items-center justify-center rounded-lg border border-dashed border-line-strong bg-card px-6 py-5 text-center">
           <FileUp size={28} strokeWidth={1.5} className="text-ink" aria-hidden />
           <h2 className="mt-2 text-[16px] font-semibold">{title}</h2>
           <p className="text-[13px] text-sub">{desc}</p>
@@ -71,25 +71,75 @@ export function ThesisUploadCard({ uploader, hasPacks, hasDemo, mobile }) {
 export function sessionList(state, pack) {
   const p = packProgress(state, pack)
   const none = 'Needs a thesis'
+  const pct = (a, b) => (b ? Math.round((Math.min(a, b) / b) * 100) : 0)
   return [
-    { id: 'guide', icon: BookOpen, title: 'Study guide', desc: 'Turn complex research into clear notes.', progress: p ? `${p.sections.done} / ${p.sections.total} complete` : none, started: p?.sections.done > 0 },
-    { id: 'cards', icon: Layers, title: 'Flashcards', desc: 'Memorize key concepts and terms.', progress: p ? `${p.terms.reviewed} / ${p.terms.total} reviewed` : none, started: p?.terms.reviewed > 0 },
-    { id: 'typing', icon: Keyboard, title: 'Typing defense', desc: 'Practice recalling terms under time pressure.', progress: p ? `${Math.min(p.typing.done, p.typing.goal)} / ${p.typing.goal} sessions` : none, started: p?.typing.done > 0 },
-    { id: 'panel', icon: Users, title: 'Practice panel', desc: 'Simulate a real defense with an AI panel.', progress: p ? (p.panel.sessions ? `Best score ${p.panel.best} / 10` : 'Not yet started') : none, started: p?.panel.sessions > 0 },
+    { id: 'guide', icon: BookOpen, title: 'Study guide', desc: 'Read your chapters', progress: p ? `${p.sections.done}/${p.sections.total} read` : none, pct: p ? pct(p.sections.done, p.sections.total) : 0, started: p?.sections.done > 0 },
+    { id: 'cards', icon: Layers, title: 'Flashcards', desc: 'Learn key terms', progress: p ? `${p.terms.reviewed}/${p.terms.total} terms` : none, pct: p ? pct(p.terms.reviewed, p.terms.total) : 0, started: p?.terms.reviewed > 0 },
+    { id: 'typing', icon: Keyboard, title: 'Typing defense', desc: 'Type terms fast', progress: p ? `${Math.min(p.typing.done, p.typing.goal)}/${p.typing.goal} games` : none, pct: p ? pct(p.typing.done, p.typing.goal) : 0, started: p?.typing.done > 0 },
+    { id: 'panel', icon: Users, title: 'Practice panel', desc: 'Answer like the real defense', progress: p ? (p.panel.sessions ? `Best ${p.panel.best}/10` : 'Not started') : none, pct: p ? Math.round(p.panel.best * 10) : 0, started: p?.panel.sessions > 0 },
   ]
 }
 
 export function SessionCard({ s, go, mobile }) {
   const Icon = s.icon
   return (
-    <button onClick={() => go(s.id)} className={`card-link flex w-full items-center text-left ${mobile ? 'min-h-[76px] gap-2.5 p-3' : 'gap-4 p-4'}`}>
-      <Icon size={mobile ? 20 : 26} strokeWidth={1.5} className="shrink-0 self-start text-ink" aria-hidden />
-      <span className="min-w-0 flex-1">
-        <span className={`block font-semibold ${mobile ? 'text-[12px] leading-tight' : 'text-[14px]'}`}>{s.title}</span>
-        {!mobile && <span className="mt-0.5 block text-[12px] leading-snug text-sub">{s.desc}</span>}
-        <span className={`mt-1.5 block font-medium ${mobile ? 'text-[11px]' : 'text-[12px]'} ${s.started ? 'text-brand' : 'text-sub'}`}>{s.progress}</span>
+    <button onClick={() => go(s.id)} className={`card-link flex w-full flex-col text-left ${mobile ? 'gap-2 p-3' : 'gap-3 p-4'}`}>
+      <span className="flex w-full items-center gap-2.5">
+        <Icon size={mobile ? 19 : 22} strokeWidth={1.6} className="shrink-0 text-brand" aria-hidden />
+        <span className={`min-w-0 flex-1 truncate font-semibold ${mobile ? 'text-[13px]' : 'text-[14px]'}`}>{s.title}</span>
+        <ChevronRight size={16} className="shrink-0 text-sub" aria-hidden />
       </span>
-      <ChevronRight size={mobile ? 16 : 18} className="shrink-0 text-sub" aria-hidden />
+      {!mobile && <span className="text-[12px] text-sub">{s.desc}</span>}
+      <span className="w-full">
+        <ProgressBar value={s.pct} className="h-1" />
+        <span className={`mt-1.5 block text-[11px] font-medium ${s.started ? 'text-brand' : 'text-sub'}`}>{s.progress}</span>
+      </span>
+    </button>
+  )
+}
+
+// One clear thing to do now (from Today's focus).
+const TASK_ICON = { guide: BookOpen, cards: Layers, panel: Users, match: Link2, typing: Keyboard, explain: MessageSquareText, confidence: HeartPulse, daily: Timer }
+export function NextStepCard({ state, pack, go }) {
+  if (!pack) return null
+  const tasks = focusTasks(state, pack)
+  const next = tasks.find((t) => !taskDone(state, t))
+  const doneCount = tasks.length - (next ? tasks.filter((t) => !taskDone(state, t)).length : 0)
+  if (!next) {
+    return (
+      <section className="card flex items-center gap-4 p-4 md:p-5">
+        <CheckCircle2 size={34} strokeWidth={1.6} className="shrink-0 text-brand" aria-hidden />
+        <div className="min-w-0 flex-1">
+          <p className="eyebrow">Today</p>
+          <h2 className="text-[16px] font-semibold md:text-[18px]">All done for today</h2>
+        </div>
+        <button className="btn-outline shrink-0" onClick={() => go('daily')}>Bonus round</button>
+      </section>
+    )
+  }
+  const Icon = TASK_ICON[next.to] || ArrowRight
+  const value = Math.min(metricValue(state, next), next.goal)
+  const open = () => { if (next.chapter != null) uiState.openChapter = next.chapter; go(next.to) }
+  return (
+    <section className="card overflow-hidden">
+      <div className="flex items-center gap-4 p-4 md:p-5">
+        <span className="grid h-12 w-12 shrink-0 place-items-center rounded-lg bg-brand-soft text-brand"><Icon size={24} strokeWidth={1.7} aria-hidden /></span>
+        <div className="min-w-0 flex-1">
+          <p className="eyebrow flex items-center gap-1">Next step <span className="normal-case tracking-normal">· {doneCount}/{tasks.length} done today</span></p>
+          <h2 className="text-[16px] font-semibold leading-snug md:text-[18px]">{next.label}</h2>
+          {next.goal > 1 && <p className="text-[12px] text-sub">{value} of {next.goal} done</p>}
+        </div>
+        <button className="btn-primary hidden shrink-0 px-6 sm:inline-flex" onClick={open}>Start <ArrowRight size={16} /></button>
+      </div>
+      <button className="btn-primary h-11 w-full rounded-none sm:hidden" onClick={open}>Start <ArrowRight size={16} /></button>
+    </section>
+  )
+}
+
+export function UploadNewButton({ uploader }) {
+  return (
+    <button className="inline-flex h-8 items-center gap-1 rounded-md px-2 text-[13px] font-semibold text-brand hover:bg-brand-soft" onClick={uploader.pick} disabled={!!uploader.busy}>
+      {uploader.busy ? <Loader2 size={15} className="animate-spin" /> : <Plus size={15} />} {uploader.busy ? 'Reading' : 'Upload new'}
     </button>
   )
 }
@@ -97,18 +147,20 @@ export function SessionCard({ s, go, mobile }) {
 export function ReadinessCard({ state, pack, mobile, children, go }) {
   const r = readiness(state, pack)
   const weak = pack ? weakestChapter(state, pack) : null
+  const L = (text, hint) => <span className="inline-flex items-center">{text}<Hint text={hint} /></span>
   const rows = [
-    { label: 'Knowledge', value: r.knowledge, color: 'bg-brand-2' },
-    { label: 'Practice', value: r.practice, color: 'bg-blue' },
-    { label: 'Confidence', value: r.confidence, color: 'bg-yellow' },
+    { label: L('Knowledge', 'Chapters you reviewed and key terms you learned.'), value: r.knowledge, color: 'bg-brand-2', key: 'k' },
+    { label: L('Practice', 'Your panel answers and typing games.'), value: r.practice, color: 'bg-blue', key: 'p' },
+    { label: L('Confidence', 'Speaking drills, breathing and your defense-day checklist.'), value: r.confidence, color: 'bg-yellow', key: 'c' },
   ]
+  const title = <h2 className="flex items-center text-[15px] font-semibold">Defense readiness<Hint text="How ready you are for your defense, based on everything you practice." /></h2>
   if (mobile) {
     return (
       <section className="card p-4">
-        <h2 className="mb-3 text-[14px] font-semibold">Defense readiness</h2>
+        <div className="mb-3">{title}</div>
         <div className="flex items-center gap-5">
           <CircularProgress value={r.overall} size={96} stroke={10} label={`Defense readiness ${r.overall}%`} />
-          <div className="flex-1 space-y-2.5">{rows.map((x) => <MetricRow key={x.label} {...x} compact />)}</div>
+          <div className="flex-1 space-y-2.5">{rows.map((x) => <MetricRow key={x.key} {...x} compact />)}</div>
         </div>
         {weak && go && <WeakChapter weak={weak} go={go} />}
       </section>
@@ -116,11 +168,11 @@ export function ReadinessCard({ state, pack, mobile, children, go }) {
   }
   return (
     <section className="card p-5">
-      <h2 className="text-[15px] font-semibold">Defense readiness</h2>
+      {title}
       <div className="my-5 flex justify-center">
         <CircularProgress value={r.overall} size={148} stroke={14} label={`Defense readiness ${r.overall}%`} />
       </div>
-      <div className="space-y-3.5">{rows.map((x) => <MetricRow key={x.label} {...x} />)}</div>
+      <div className="space-y-3.5">{rows.map((x) => <MetricRow key={x.key} {...x} />)}</div>
       {!pack && <p className="mt-4 text-[12px] text-sub">Upload a thesis to start building your score.</p>}
       {weak && go && <WeakChapter weak={weak} go={go} />}
       {children && <div className="mt-5 border-t border-line pt-4">{children}</div>}
@@ -133,7 +185,7 @@ function WeakChapter({ weak, go }) {
     <button onClick={() => { uiState.openChapter = weak.index; go('guide') }}
       className="mt-4 flex w-full items-center gap-3 rounded-md border border-line bg-bg px-3 py-2.5 text-left hover:border-brand-2/40">
       <span className="min-w-0 flex-1">
-        <span className="block text-[11px] font-medium uppercase tracking-wide text-sub">Weakest chapter</span>
+        <span className="block text-[11px] font-medium uppercase tracking-wide text-sub">Study this next</span>
         <span className="block truncate text-[13px] font-semibold">{weak.title}</span>
       </span>
       <span className="text-[13px] font-semibold text-red">{weak.score}%</span>
@@ -155,10 +207,9 @@ export function FocusChecklist({ state, update, go, pack }) {
   return (
     <div>
       <div className="mb-1 flex items-center justify-between">
-        <h2 className="text-[15px] font-semibold">Today's focus</h2>
+        <h2 className="flex items-center text-[15px] font-semibold">Today's focus<Hint text="Your tasks for today. They tick themselves when you finish them in the app." /></h2>
         <span className="text-[12px] text-sub">{count}/{tasks.length}</span>
       </div>
-      {plan && <p className="mb-1 text-[12px] text-sub">From your prep plan · {PHASES[plan.phase].name}</p>}
       {tasks.map((t) => {
         const done = taskDone(state, t)
         const value = Math.min(metricValue(state, t), t.goal)
@@ -166,7 +217,7 @@ export function FocusChecklist({ state, update, go, pack }) {
           <div key={t.id} className="flex items-center gap-1">
             <div className="min-w-0 flex-1">
               <Checkbox checked={done} onChange={(v) => toggle(t.id, v)} label={t.label} strike
-                sub={!done && t.goal > 1 ? `${value} of ${t.goal} done` : done && value >= t.goal ? 'Done automatically' : undefined} />
+                sub={!done && t.goal > 1 ? `${value} of ${t.goal}` : undefined} />
             </div>
             <button onClick={() => { if (t.chapter != null) uiState.openChapter = t.chapter; go(t.to) }} className="grid h-8 w-8 shrink-0 place-items-center rounded-md text-sub hover:bg-bg hover:text-ink" aria-label={`Open: ${t.label}`}>
               <ChevronRight size={16} aria-hidden />
@@ -211,8 +262,8 @@ export function CountdownCard({ state, pack, go, mobile }) {
       <button onClick={() => go('plan')} className={`card-link flex w-full items-center gap-3 text-left ${mobile ? 'p-4' : 'p-5'}`}>
         <span className="grid h-10 w-10 shrink-0 place-items-center rounded-md bg-brand-soft text-brand"><CalendarDays size={20} strokeWidth={1.75} aria-hidden /></span>
         <span className="min-w-0 flex-1">
-          <span className="block text-[14px] font-semibold">When is your defense?</span>
-          <span className="block text-[12px] text-sub">Set the date and get a day-by-day prep plan.</span>
+          <span className="block text-[14px] font-semibold">Set your defense date</span>
+          <span className="block text-[12px] text-sub">Get a daily prep plan</span>
         </span>
         <ChevronRight size={18} className="shrink-0 text-sub" aria-hidden />
       </button>
@@ -225,7 +276,7 @@ export function CountdownCard({ state, pack, go, mobile }) {
       </span>
       <span className="min-w-0 flex-1">
         <span className="block text-[14px] font-semibold">{n === 0 ? 'Defense day. You are ready.' : 'Until your defense'}</span>
-        <span className="block text-[12px] text-sub">{plan ? `${PHASES[plan.phase].name} phase · ${done}/${tasks.length} tasks done today` : 'Open your prep plan'}</span>
+        <span className="block text-[12px] text-sub">{plan ? `${PHASES[plan.phase].name} phase · ${done}/${tasks.length} done today` : 'Open your prep plan'}</span>
       </span>
       <ChevronRight size={18} className="shrink-0 text-sub" aria-hidden />
     </button>

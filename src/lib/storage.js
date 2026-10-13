@@ -2,7 +2,7 @@
 const KEY = 'defendit:v1'
 
 const defaults = {
-  settings: { apiKey: '', model: 'gemini-2.5-flash' },
+  settings: { apiKey: '', model: 'gemini-2.5-flash', theme: 'system' },
   profile: { xp: 0, streak: 0, lastDay: '', best: {}, fillerHistory: [] },
   packs: [], // study packs made from uploaded files
   activeId: null,

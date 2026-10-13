@@ -1,10 +1,11 @@
 import { useState } from 'react'
-import { AlertCircle, Bot, CheckCircle2, Flame, Loader2, Smartphone, Trophy } from 'lucide-react'
+import { AlertCircle, BellRing, Bot, CalendarPlus, CheckCircle2, Flame, Loader2, Monitor, Moon, Smartphone, Sun, Trophy } from 'lucide-react'
 import { IconBox, Notice, PageHeader, ProgressBar, SectionTitle } from '../components/ui.jsx'
 import { hasAI, serverAIEnabled, testKey } from '../lib/ai.js'
 import { levelInfo, LEVELS } from '../lib/storage.js'
+import { askBrowserPermission, downloadIcs, isNative } from '../lib/reminders.js'
 
-export default function Settings({ state, update }) {
+export default function Settings({ state, update, pack }) {
   const [key, setKey] = useState(state.settings.apiKey)
   const [model, setModel] = useState(state.settings.model)
   const [status, setStatus] = useState(null) // { tone, text }
@@ -18,7 +19,7 @@ export default function Settings({ state, update }) {
     setStatus(null)
     try {
       await testKey({ apiKey: key.trim(), model: model.trim() })
-      update((s) => ({ ...s, settings: { apiKey: key.trim(), model: model.trim() } }))
+      update((s) => ({ ...s, settings: { ...s.settings, apiKey: key.trim(), model: model.trim() } }))
       setStatus({ tone: 'green', text: 'AI mode is on. New uploads will use Gemini.' })
     } catch (e) {
       setStatus({ tone: 'red', text: e.message })
@@ -30,6 +31,23 @@ export default function Settings({ state, update }) {
   return (
     <div className="max-w-3xl">
       <PageHeader eyebrow="Settings" title="Settings" desc="Everything is saved on this device only." />
+
+      <section className="card mb-4 p-5">
+        <h2 className="text-[15px] font-semibold">Appearance</h2>
+        <div className="mt-3 grid grid-cols-3 gap-2" role="radiogroup" aria-label="Theme">
+          {[['system', 'System', Monitor], ['light', 'Light', Sun], ['dark', 'Dark', Moon]].map(([id, label, Icon]) => {
+            const on = (state.settings.theme || 'system') === id
+            return (
+              <button key={id} role="radio" aria-checked={on} onClick={() => update((s) => ({ ...s, settings: { ...s.settings, theme: id } }))}
+                className={`flex h-16 flex-col items-center justify-center gap-1 rounded-md border text-[13px] font-medium ${on ? 'border-brand-2 bg-brand-soft text-brand' : 'border-line hover:bg-bg'}`}>
+                <Icon size={18} strokeWidth={1.75} aria-hidden /> {label}
+              </button>
+            )
+          })}
+        </div>
+      </section>
+
+      <Reminders state={state} update={update} pack={pack} />
 
       <section className="card p-5">
         <div className="flex items-start gap-3">
@@ -52,7 +70,7 @@ export default function Settings({ state, update }) {
         <details className="mt-4 rounded-md border border-line p-3 text-[13px]" open={!server || !!state.settings.apiKey}>
           <summary className="cursor-pointer font-medium">{server ? 'Use your own key instead (optional)' : 'Add a free Gemini key'}</summary>
           {server && <p className="mt-2 text-[12px] text-sub">Only needed if the app's shared AI is busy. Your own key gives you your own free daily limit.</p>}
-          <ol className="mt-3 list-decimal space-y-1 pl-5 text-[13px] text-[#2b343d]">
+          <ol className="mt-3 list-decimal space-y-1 pl-5 text-[13px] text-ink-2">
             <li>Open <a className="font-semibold text-brand underline-offset-2 hover:underline" href="https://aistudio.google.com/apikey" target="_blank" rel="noreferrer">aistudio.google.com/apikey</a> and sign in with Google.</li>
             <li>Select <b>Create API key</b> and copy it.</li>
             <li>Paste it below. It is stored only in this browser.</li>
@@ -98,7 +116,7 @@ export default function Settings({ state, update }) {
       <SectionTitle>Install on your phone</SectionTitle>
       <section className="card flex gap-3 p-5">
         <IconBox icon={Smartphone} tone="blue" size="sm" />
-        <p className="text-[13px] text-[#2b343d]">Android (Chrome): open the menu and choose <b>Add to Home screen</b>. iPhone (Safari): tap Share, then <b>Add to Home Screen</b>.</p>
+        <p className="text-[13px] text-ink-2">Android (Chrome): open the menu and choose <b>Add to Home screen</b>. iPhone (Safari): tap Share, then <b>Add to Home Screen</b>.</p>
       </section>
     </div>
   )
@@ -110,5 +128,52 @@ function Mini({ icon: Icon, label, value }) {
       <div className="flex items-center gap-1.5 text-[12px] text-sub">{Icon && <Icon size={14} />}{label}</div>
       <div className="mt-0.5 truncate text-[14px] font-semibold">{value}</div>
     </div>
+  )
+}
+
+function Reminders({ state, update, pack }) {
+  const r = state.profile.reminders || { enabled: false, time: '19:00' }
+  const [msg, setMsg] = useState(null)
+  const set = (patch) => update((s) => ({ ...s, profile: { ...s.profile, reminders: { ...r, ...patch } } }))
+
+  async function toggle(enabled) {
+    set({ enabled })
+    setMsg(null)
+    if (enabled && !isNative) {
+      const p = await askBrowserPermission()
+      if (p === 'denied') setMsg({ tone: 'yellow', text: 'Browser notifications are blocked. Use "Add to my calendar" so your phone reminds you.' })
+    }
+  }
+
+  return (
+    <section className="card mb-4 p-5">
+      <div className="flex items-start gap-3">
+        <IconBox icon={BellRing} tone="yellow" />
+        <div className="flex-1">
+          <h2 className="text-[15px] font-semibold">Reminders</h2>
+          <p className="text-[13px] text-sub">A daily nudge to practice, plus your defense date.</p>
+        </div>
+        <label className="relative inline-flex h-7 w-12 shrink-0 cursor-pointer items-center">
+          <input type="checkbox" className="peer sr-only" checked={!!r.enabled} onChange={(e) => toggle(e.target.checked)} aria-label="Daily reminder" />
+          <span className="absolute inset-0 rounded-full bg-track transition-colors peer-checked:bg-brand peer-focus-visible:ring-2 peer-focus-visible:ring-brand-2" />
+          <span className="absolute left-1 h-5 w-5 rounded-full bg-white shadow transition-transform peer-checked:translate-x-5" />
+        </label>
+      </div>
+      <div className="mt-4 flex flex-wrap items-end gap-3">
+        <div>
+          <label htmlFor="rtime" className="text-[12px] font-medium text-sub">Remind me at</label>
+          <input id="rtime" type="time" className="input mt-1 !w-36" value={r.time || '19:00'} onChange={(e) => set({ time: e.target.value })} />
+        </div>
+        <button className="btn-outline" onClick={() => { downloadIcs({ time: r.time || '19:00', defenseDate: pack?.defenseDate, title: pack?.title }); setMsg({ tone: 'green', text: 'Calendar file downloaded. Open it to add the reminders to your calendar.' }) }}>
+          <CalendarPlus size={16} /> Add to my calendar
+        </button>
+      </div>
+      <p className="mt-2 text-[12px] text-sub">
+        {isNative
+          ? 'The app will notify you every day at this time, and the day before your defense.'
+          : `Calendar reminders work on any phone${pack?.defenseDate ? ' and include your defense date' : ''}. The app also reminds you when you open it after this time.`}
+      </p>
+      {msg && <div className="mt-3"><Notice tone={msg.tone} icon={msg.tone === 'green' ? CheckCircle2 : AlertCircle}>{msg.text}</Notice></div>}
+    </section>
   )
 }

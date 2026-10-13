@@ -81,7 +81,7 @@ export default function Confidence({ state, update, addXP, track }) {
           <div className="grid gap-2 sm:grid-cols-2">
             {TIPS.map(([t, d]) => (
               <div key={t} className="card flex gap-3 p-4">
-                <Lightbulb size={17} strokeWidth={1.75} className="mt-0.5 shrink-0 text-[#b38a00]" aria-hidden />
+                <Lightbulb size={17} strokeWidth={1.75} className="mt-0.5 shrink-0 text-yellow-ink" aria-hidden />
                 <div>
                   <div className="text-[13px] font-semibold">{t}</div>
                   <div className="text-[12px] leading-snug text-sub">{d}</div>
@@ -226,7 +226,7 @@ function SpeakDrill({ onDone }) {
 function Stat({ label, value, good, hint }) {
   return (
     <div className="p-3 text-center">
-      <div className={`text-[20px] font-bold ${good ? 'text-brand' : 'text-[#8a6a00]'}`}>{value}</div>
+      <div className={`text-[20px] font-bold ${good ? 'text-brand' : 'text-yellow-ink'}`}>{value}</div>
       <div className="text-[11px] text-sub">{label}</div>
       <div className="truncate text-[11px]">{hint}</div>
     </div>

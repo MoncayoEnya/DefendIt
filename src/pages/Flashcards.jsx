@@ -133,7 +133,7 @@ function Session({ mode, deck, onAnswer, onDone, onAgain, onExit }) {
         <button className="text-[13px] font-medium text-sub hover:text-ink" onClick={onExit}>Exit</button>
         <ProgressBar value={(i / deck.length) * 100} className="h-1.5 flex-1" />
         <span className="text-[12px] font-medium text-sub">{i + 1} / {deck.length}</span>
-        {combo >= 2 && <span className="inline-flex items-center gap-1 text-[12px] font-semibold text-[#8a6a00]"><Zap size={14} /> {combo} streak</span>}
+        {combo >= 2 && <span className="inline-flex items-center gap-1 text-[12px] font-semibold text-yellow-ink"><Zap size={14} /> {combo} streak</span>}
       </div>
 
       {mode === 'flip' ? (
@@ -153,7 +153,7 @@ function Session({ mode, deck, onAnswer, onDone, onAgain, onExit }) {
           </div>
           {flipped ? (
             <div className="grid grid-cols-2 gap-2">
-              <button className="btn h-11 border border-red/40 bg-white text-red hover:bg-red-soft" onClick={() => next(false)}><X size={16} /> Missed it</button>
+              <button className="btn h-11 border border-red/40 bg-card text-red hover:bg-red-soft" onClick={() => next(false)}><X size={16} /> Missed it</button>
               <button className="btn-primary h-11" onClick={() => next(true)}><Check size={16} /> Knew it</button>
             </div>
           ) : (
@@ -171,7 +171,7 @@ function Session({ mode, deck, onAnswer, onDone, onAgain, onExit }) {
           {result && (
             <div className="fade-up text-[14px] font-semibold" aria-live="polite">
               {result === 'right' && <p className="flex items-center gap-1.5 text-brand"><Check size={16} /> Correct</p>}
-              {result === 'close' && <p className="text-[#8a6a00]">Close enough. Exact term: <span className="font-mono">{card.term}</span></p>}
+              {result === 'close' && <p className="text-yellow-ink">Close enough. Exact term: <span className="font-mono">{card.term}</span></p>}
               {result === 'wrong' && <p className="text-red">Answer: <span className="font-mono">{card.term}</span></p>}
             </div>
           )}

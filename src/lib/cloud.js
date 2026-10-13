@@ -37,7 +37,9 @@ export async function signInWithGoogle() {
   const sb = await getClient()
   const { data, error } = await sb.auth.signInWithOAuth({
     provider: 'google',
-    options: { redirectTo: `${location.origin}${location.pathname}#account`, skipBrowserRedirect: true },
+    // Return to the site's main address (no #page part). Supabase only accepts addresses listed under
+    // Authentication > URL Configuration; anything else falls back to the Site URL (often localhost).
+    options: { redirectTo: `${location.origin}/`, skipBrowserRedirect: true },
   })
   if (error) throw error
   // Check first, so a disabled provider shows a friendly message instead of a raw error page.
@@ -51,6 +53,7 @@ export async function signInWithGoogle() {
     if (/provider|not enabled|validation/i.test(e.message)) throw e
     // network or redirect checks we cannot read: just continue to Google
   }
+  try { sessionStorage.setItem('defendit:afterAuth', 'account') } catch { /* private mode */ }
   location.href = data.url
 }
 
@@ -129,4 +132,46 @@ export async function fetchLeaderboard(code) {
 
 export function normalizeCode(code) {
   return (code || '').toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 20)
+}
+
+// ---------- evaluation survey ----------
+export async function createSurvey(code, title) {
+  const sb = await getClient()
+  const { data: { user } } = await sb.auth.getUser()
+  const { error } = await sb.from('surveys').insert({ code, title, owner: user.id })
+  if (error) throw error
+}
+
+export async function mySurveys() {
+  const sb = await getClient()
+  const { data: { user } } = await sb.auth.getUser()
+  const { data, error } = await sb.from('surveys').select('code, title, created_at').eq('owner', user.id).order('created_at', { ascending: false })
+  if (error) throw error
+  return data
+}
+
+export async function surveyInfo(code) {
+  const sb = await getClient()
+  const { data, error } = await sb.from('surveys').select('code, title').eq('code', code).maybeSingle()
+  if (error) throw error
+  return data
+}
+
+export async function submitSurvey(code, answers) {
+  const sb = await getClient()
+  const { error } = await sb.from('survey_responses').insert({ code, answers })
+  if (error) throw error
+}
+
+export async function fetchSurveyResponses(code) {
+  const sb = await getClient()
+  const { data, error } = await sb.from('survey_responses').select('answers, created_at').eq('code', code).order('created_at')
+  if (error) throw error
+  return data
+}
+
+export async function deleteSurvey(code) {
+  const sb = await getClient()
+  const { error } = await sb.from('surveys').delete().eq('code', code)
+  if (error) throw error
 }

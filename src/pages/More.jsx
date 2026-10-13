@@ -1,5 +1,5 @@
-import { Award, CalendarDays, MessageSquareText, Presentation, Timer, Cloud, CloudOff, HeartPulse, Keyboard, Link2, ListOrdered, Settings as SettingsIcon, Swords, UsersRound } from 'lucide-react'
-import { FocusChecklist, ThesisDocumentCard, ThesisUploadCard } from '../components/Dashboard.jsx'
+import { Award, ClipboardList, Printer, CalendarDays, MessageSquareText, Presentation, Timer, Cloud, CloudOff, HeartPulse, Keyboard, Link2, ListOrdered, Settings as SettingsIcon, Swords, UsersRound } from 'lucide-react'
+import { FocusChecklist, ThesisDocumentCard, ThesisUploadCard, UploadNewButton } from '../components/Dashboard.jsx'
 import { ListLink, PageHeader, SectionTitle } from '../components/ui.jsx'
 import { levelInfo } from '../lib/storage.js'
 import { hasAI } from '../lib/ai.js'
@@ -23,7 +23,7 @@ export default function More({ state, update, go, uploader, cloud, pack }) {
 
       <div className="card p-4"><FocusChecklist state={state} update={update} go={go} pack={pack} /></div>
 
-      <SectionTitle>Your thesis documents</SectionTitle>
+      <SectionTitle right={state.packs.length > 0 && <UploadNewButton uploader={uploader} />}>Your thesis documents</SectionTitle>
       {state.packs.length ? (
         <div className="space-y-2">
           {state.packs.map((p) => (
@@ -38,6 +38,8 @@ export default function More({ state, update, go, uploader, cloud, pack }) {
 
       <SectionTitle>Tools</SectionTitle>
       <div className="space-y-2">
+        <ListLink icon={Printer} tone="brand" title="Printable reviewer" meta="Print or save your study guide as a PDF" onClick={() => go('reviewer')} />
+        <ListLink icon={ClipboardList} tone="blue" title="Evaluation survey" meta="Let people rate the app for your thesis" onClick={() => go('evaluation')} />
         <ListLink icon={CalendarDays} tone="brand" title="Defense countdown" meta="Your day-by-day prep plan" onClick={() => go('plan')} />
         <ListLink icon={Timer} tone="yellow" title="Daily challenge" meta="5 minutes: terms and one panel question" onClick={() => go('daily')} />
         <ListLink icon={MessageSquareText} tone="brand" title="Explain it simply" meta="Say your study in plain words" onClick={() => go('explain')} />

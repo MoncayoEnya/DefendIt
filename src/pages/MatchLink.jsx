@@ -166,10 +166,10 @@ function Board({ mode, pack, onExit, onAgain, onFinish }) {
   const renderChip = (item) => {
     const state = checked ? (okMap[item.id] ? 'ok' : 'bad') : selected === item.id ? 'sel' : 'idle'
     const cls = {
-      idle: 'border-line bg-white hover:border-brand-2/50',
+      idle: 'border-line bg-card hover:border-brand-2/50',
       sel: 'border-brand bg-brand-soft ring-2 ring-brand-soft',
       ok: 'border-brand-2/50 bg-brand-soft text-brand',
-      bad: 'border-red/50 bg-red-soft text-[#9b3434]',
+      bad: 'border-red/50 bg-red-soft text-red-ink',
     }[state]
     return (
       <button
@@ -227,7 +227,7 @@ function Board({ mode, pack, onExit, onAgain, onFinish }) {
               onClick={() => tapTarget(t.id)}
               className={`card min-h-[88px] p-4 transition-colors ${selected ? 'cursor-pointer border-dashed !border-brand-2/60 hover:bg-brand-soft/40' : ''}`}
             >
-              <div className={`mb-2 ${mode === 'chapter' ? 'text-[14px] font-semibold' : 'text-[13px] leading-snug text-[#2b343d]'}`}>{t.label}</div>
+              <div className={`mb-2 ${mode === 'chapter' ? 'text-[14px] font-semibold' : 'text-[13px] leading-snug text-ink-2'}`}>{t.label}</div>
               <div className="flex flex-wrap gap-2">
                 {here.map(renderChip)}
                 {!here.length && <span className="text-[12px] text-sub">Drop a term here</span>}
@@ -247,7 +247,7 @@ function Board({ mode, pack, onExit, onAgain, onFinish }) {
       )}
 
       {drag && (
-        <div className="pointer-events-none fixed z-50 -translate-x-1/2 -translate-y-1/2 rounded-md border border-brand bg-white px-3 py-1.5 text-[13px] font-medium shadow-lg"
+        <div className="pointer-events-none fixed z-50 -translate-x-1/2 -translate-y-1/2 rounded-md border border-brand bg-card px-3 py-1.5 text-[13px] font-medium shadow-lg"
           style={{ left: drag.x, top: drag.y }}>
           {items.find((i) => i.id === drag.id)?.label}
         </div>

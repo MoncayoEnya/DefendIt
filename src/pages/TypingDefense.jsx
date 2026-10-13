@@ -188,24 +188,24 @@ function Game({ pack, onEnd }) {
           {Array.from({ length: LIVES }, (_, i) => <Heart key={i} size={17} className={i < st.lives ? 'fill-red text-red' : 'text-track'} aria-hidden />)}
         </span>
         <span className="text-sub">Wave {st.wave}</span>
-        <span>{st.combo >= 2 && <span className="mr-3 text-[#8a6a00]">Streak {st.combo}</span>}<span className="text-brand">{st.score}</span></span>
+        <span>{st.combo >= 2 && <span className="mr-3 text-yellow-ink">Streak {st.combo}</span>}<span className="text-brand">{st.score}</span></span>
       </div>
 
       <div className="card relative h-[50vh] min-h-[300px] overflow-hidden" onClick={() => inputRef.current?.focus()}
-        style={{ backgroundImage: 'linear-gradient(#eef2f4 1px, transparent 1px), linear-gradient(90deg, #eef2f4 1px, transparent 1px)', backgroundSize: '28px 28px' }}>
+        style={{ backgroundImage: 'linear-gradient(var(--color-track) 1px, transparent 1px), linear-gradient(90deg, var(--color-track) 1px, transparent 1px)', backgroundSize: '28px 28px' }}>
         {st.enemies.map((e) => {
           const isT = target === e
           const k = isT ? matchLen(e.text, typed) : 0
           return (
             <div key={e.id} className="absolute -translate-x-1/2 text-center" style={{ left: `${e.x}%`, top: `${e.y * 88}%` }}>
               {e.boss ? (
-                <div className={`w-64 max-w-[78vw] rounded-md border bg-white p-3 text-left shadow-sm ${isT ? 'border-brand' : 'border-red/50'}`}>
+                <div className={`w-64 max-w-[78vw] rounded-md border bg-card p-3 text-left shadow-sm ${isT ? 'border-brand' : 'border-red/50'}`}>
                   <div className="eyebrow !text-red">Definition</div>
                   <div className="mt-0.5 text-[13px] leading-snug">{e.clue}</div>
                   {isT && <div className="mt-1 font-mono text-[13px] font-semibold text-brand">{e.text.slice(0, k)}</div>}
                 </div>
               ) : (
-                <div className={`whitespace-nowrap rounded-md border px-2 py-1 font-mono text-[13px] shadow-sm ${isT ? 'border-brand bg-white' : 'border-line bg-white'}`}>
+                <div className={`whitespace-nowrap rounded-md border px-2 py-1 font-mono text-[13px] shadow-sm ${isT ? 'border-brand bg-card' : 'border-line bg-card'}`}>
                   <span className="font-semibold text-brand">{e.text.slice(0, k)}</span>{e.text.slice(k)}
                 </div>
               )}

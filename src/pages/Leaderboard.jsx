@@ -96,7 +96,7 @@ export default function Leaderboard({ state, update, cloud, go }) {
         }
       />
 
-      <div className="mb-3 inline-flex rounded-md border border-line bg-white p-1" role="tablist">
+      <div className="mb-3 inline-flex rounded-md border border-line bg-card p-1" role="tablist">
         {SORTS.map((s) => (
           <button key={s.id} role="tab" aria-selected={sort === s.id} onClick={() => setSort(s.id)}
             className={`h-8 rounded px-3 text-[13px] font-medium ${sort === s.id ? 'bg-brand text-white' : 'text-sub hover:text-ink'}`}>{s.label}</button>

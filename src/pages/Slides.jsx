@@ -131,7 +131,7 @@ export default function Slides({ state, pack, addXP, track, go, update }) {
               <SectionTitle>Whole deck</SectionTitle>
               <section className="card space-y-2.5 p-4">
                 {report.deckIssues.length === 0 && <p className="flex gap-2 text-[13px]"><Check size={15} className="mt-0.5 text-brand" />Good length and structure.</p>}
-                {report.deckIssues.map((d, i) => <p key={i} className="flex gap-2 text-[13px]"><AlertTriangle size={15} className="mt-0.5 shrink-0 text-[#b38a00]" />{d}</p>)}
+                {report.deckIssues.map((d, i) => <p key={i} className="flex gap-2 text-[13px]"><AlertTriangle size={15} className="mt-0.5 shrink-0 text-yellow-ink" />{d}</p>)}
                 {report.termsMissing.length > 0 && (
                   <div>
                     <p className="flex gap-2 text-[13px]"><Info size={15} className="mt-0.5 shrink-0 text-blue" />Key terms from your thesis that never appear on a slide:</p>
@@ -156,7 +156,7 @@ export default function Slides({ state, pack, addXP, track, go, update }) {
                     {(s.images > 0 || s.charts > 0) && <Image size={15} className="text-sub" aria-label="Has visuals" />}
                     <span className="hidden text-[12px] text-sub sm:inline">{s.words} word{s.words === 1 ? '' : 's'}</span>
                     {bad > 0 ? <span className="tag !border-red/40 !bg-red-soft !text-red">{bad + warn} issue{bad + warn === 1 ? '' : 's'}</span>
-                      : warn > 0 ? <span className="tag !border-yellow/50 !bg-yellow-soft !text-[#6b5300]">{warn} to fix</span>
+                      : warn > 0 ? <span className="tag !border-yellow/50 !bg-yellow-soft !text-yellow-ink">{warn} to fix</span>
                         : <Check size={16} className="text-brand" aria-label="Looks good" />}
                     <ChevronDown size={16} className={`text-sub transition-transform ${isOpen ? 'rotate-180' : ''}`} />
                   </button>
@@ -165,7 +165,7 @@ export default function Slides({ state, pack, addXP, track, go, update }) {
                       {s.issues.length === 0 && <p className="text-[13px] text-brand">This slide looks good.</p>}
                       {s.issues.map((iss, i) => (
                         <p key={i} className="flex gap-2 text-[13px]">
-                          {iss.level === 'bad' ? <AlertCircle size={15} className="mt-0.5 shrink-0 text-red" /> : iss.level === 'warn' ? <AlertTriangle size={15} className="mt-0.5 shrink-0 text-[#b38a00]" /> : <Lightbulb size={15} className="mt-0.5 shrink-0 text-blue" />}
+                          {iss.level === 'bad' ? <AlertCircle size={15} className="mt-0.5 shrink-0 text-red" /> : iss.level === 'warn' ? <AlertTriangle size={15} className="mt-0.5 shrink-0 text-yellow-ink" /> : <Lightbulb size={15} className="mt-0.5 shrink-0 text-blue" />}
                           {iss.text}
                         </p>
                       ))}

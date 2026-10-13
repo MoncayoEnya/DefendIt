@@ -120,7 +120,7 @@ export default function Plan({ state, pack, update, go }) {
                             disabled={!isToday}
                             onClick={() => { if (t.chapter != null) uiState.openChapter = t.chapter; go(t.to) }}
                           >
-                            {ok ? <Check size={16} className="shrink-0 text-brand" aria-label="Done" /> : missed ? <X size={16} className="shrink-0 text-red" aria-label="Missed" /> : <Circle size={15} className="shrink-0 text-[#c4ced6]" aria-hidden />}
+                            {ok ? <Check size={16} className="shrink-0 text-brand" aria-label="Done" /> : missed ? <X size={16} className="shrink-0 text-red" aria-label="Missed" /> : <Circle size={15} className="shrink-0 text-line-strong" aria-hidden />}
                             <span className={`flex-1 text-[13px] ${ok ? 'text-sub line-through' : ''}`}>{t.label}</span>
                             {isToday && !ok && t.goal > 1 && <span className="text-[12px] text-sub">{Math.min(metricValue(state, t, d.date), t.goal)}/{t.goal}</span>}
                             {isToday && !ok && <ChevronRight size={15} className="text-sub" aria-hidden />}

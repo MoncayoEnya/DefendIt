@@ -108,7 +108,7 @@ export default function Explain({ state, pack, update, addXP, go, track }) {
           {jargon.length > 0 && (
             <div className="mt-4">
               <div className="eyebrow mb-1.5">Words a non-expert may not know</div>
-              <div className="flex flex-wrap gap-1.5">{jargon.map((j) => <span key={j} className="tag !bg-yellow-soft !text-[#6b5300] !border-yellow/50">{j}</span>)}</div>
+              <div className="flex flex-wrap gap-1.5">{jargon.map((j) => <span key={j} className="tag !bg-yellow-soft !text-yellow-ink !border-yellow/50">{j}</span>)}</div>
             </div>
           )}
 
@@ -116,7 +116,7 @@ export default function Explain({ state, pack, update, addXP, go, track }) {
             <div className="eyebrow mb-1.5">Tips</div>
             <ul className="space-y-1.5">
               {[...(result.ai?.missing || []).map((m) => `Missing: ${m}`), ...o.tips].slice(0, 5).map((t, i) => (
-                <li key={i} className="flex gap-2 text-[13px]"><Lightbulb size={15} className="mt-0.5 shrink-0 text-[#b38a00]" />{t}</li>
+                <li key={i} className="flex gap-2 text-[13px]"><Lightbulb size={15} className="mt-0.5 shrink-0 text-yellow-ink" />{t}</li>
               ))}
             </ul>
           </div>
@@ -125,9 +125,9 @@ export default function Explain({ state, pack, update, addXP, go, track }) {
             <div className="mt-4 rounded-md border border-brand-2/25 bg-brand-soft p-4">
               <div className="mb-1 flex items-center justify-between">
                 <span className="eyebrow !text-brand">A simpler way to say it</span>
-                <button onClick={() => speak(result.ai.simpler)} className="grid h-7 w-7 place-items-center rounded text-brand hover:bg-white" aria-label="Listen"><Volume2 size={15} /></button>
+                <button onClick={() => speak(result.ai.simpler)} className="grid h-7 w-7 place-items-center rounded text-brand hover:bg-card" aria-label="Listen"><Volume2 size={15} /></button>
               </div>
-              <p className="text-[14px] leading-relaxed text-[#1f3a2e]">{result.ai.simpler}</p>
+              <p className="text-[14px] leading-relaxed text-brand-ink">{result.ai.simpler}</p>
             </div>
           )}
           <button className="btn-ghost mt-4 w-full" onClick={nextPrompt}>Try the next task</button>

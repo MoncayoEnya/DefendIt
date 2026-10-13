@@ -11,7 +11,7 @@ import { getGroup } from '../lib/group.js'
 
 const PANEL = [
   { name: 'Dr. Numbers', title: 'Statistics and validity', icon: Calculator, tone: 'bg-blue-soft text-blue', style: 'precise and skeptical, focuses on sample size, statistics, validity and whether numbers support claims' },
-  { name: 'Prof. Method', title: 'Design and procedures', icon: Search, tone: 'bg-yellow-soft text-[#8a6a00]', style: 'calm but relentless, questions research design, instruments, procedures and limitations' },
+  { name: 'Prof. Method', title: 'Design and procedures', icon: Search, tone: 'bg-yellow-soft text-yellow-ink', style: 'calm but relentless, questions research design, instruments, procedures and limitations' },
   { name: 'Dean Impact', title: 'Significance and novelty', icon: GraduationCap, tone: 'bg-brand-soft text-brand', style: 'big-picture, asks about significance, novelty, real-world impact and future work' },
 ]
 const PANELIST_HP = 100
@@ -247,7 +247,7 @@ function Battle({ track, game, setGame, group, pack, state, update, pressure, ha
 
   const score = result ? finalScore() : null
   const words = answer.trim().split(/\s+/).filter(Boolean).length
-  const scoreTone = score >= 7 ? 'text-brand' : score >= 5 ? 'text-[#8a6a00]' : 'text-red'
+  const scoreTone = score >= 7 ? 'text-brand' : score >= 5 ? 'text-yellow-ink' : 'text-red'
 
   return (
     <div className="space-y-3">
@@ -270,7 +270,7 @@ function Battle({ track, game, setGame, group, pack, state, update, pressure, ha
           </div>
         </div>
         {hit && (
-          <div className="fade-up absolute right-4 top-3 rounded-md border border-line bg-white px-2 py-1 text-right text-[12px] font-semibold shadow-sm">
+          <div className="fade-up absolute right-4 top-3 rounded-md border border-line bg-card px-2 py-1 text-right text-[12px] font-semibold shadow-sm">
             {hit.dmg > 0 && <div className="text-brand">Convinced +{hit.dmg}</div>}
             {hit.hurt > 0 && <div className="text-red">Composure -{hit.hurt}</div>}
           </div>
@@ -324,9 +324,9 @@ function Battle({ track, game, setGame, group, pack, state, update, pressure, ha
                 <div className="rounded-md border border-brand-2/25 bg-brand-soft p-4">
                   <div className="mb-1 flex items-center justify-between">
                     <span className="eyebrow !text-brand">Stronger answer</span>
-                    <button onClick={() => speak(result.betterAnswer)} className="grid h-7 w-7 place-items-center rounded text-brand hover:bg-white" aria-label="Listen to stronger answer"><Volume2 size={15} /></button>
+                    <button onClick={() => speak(result.betterAnswer)} className="grid h-7 w-7 place-items-center rounded text-brand hover:bg-card" aria-label="Listen to stronger answer"><Volume2 size={15} /></button>
                   </div>
-                  <p className="text-[13px] leading-relaxed text-[#1f3a2e]">{result.betterAnswer}</p>
+                  <p className="text-[13px] leading-relaxed text-brand-ink">{result.betterAnswer}</p>
                 </div>
               )}
             </div>
@@ -341,7 +341,7 @@ function Battle({ track, game, setGame, group, pack, state, update, pressure, ha
           <div className="card grid grid-cols-2 divide-x divide-line">
             <div className="p-3.5">
               <div className="text-[12px] text-sub">Length</div>
-              <div className="text-[14px] font-semibold">{result.words} words {result.words < 25 ? <span className="font-normal text-[#8a6a00]">· a bit short</span> : result.words > 180 ? <span className="font-normal text-[#8a6a00]">· be more concise</span> : <span className="font-normal text-brand">· good length</span>}</div>
+              <div className="text-[14px] font-semibold">{result.words} words {result.words < 25 ? <span className="font-normal text-yellow-ink">· a bit short</span> : result.words > 180 ? <span className="font-normal text-yellow-ink">· be more concise</span> : <span className="font-normal text-brand">· good length</span>}</div>
             </div>
             <div className="p-3.5">
               <div className="text-[12px] text-sub">Filler words</div>

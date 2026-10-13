@@ -16,6 +16,10 @@ Works on computer and phone (installable as an app). 100% free.
 - **Daily challenge**: 5 key terms + 1 panel question every day, bonus XP.
 - **Explain it simply**: explain your study in plain words; get a clarity score, jargon list and (with AI) a simpler version.
 - **Slide checker**: upload your PowerPoint (.pptx); finds wordy slides, missing titles and missing defense parts, optional AI review.
+- **Printable reviewer**: print your study guide or save it as a PDF.
+- **Reminders**: daily practice reminder and defense date, through your calendar (any phone) or real notifications (Android app).
+- **Evaluation survey**: System Usability Scale + ISO/IEC 25010 items, shared by link or QR code; results with SUS score, weighted means, interpretation and CSV export for your Results chapter.
+- **Dark mode**: System, Light or Dark.
 - **Badges** (19), XP levels, daily streak, readiness score from real activity.
 - **Accounts (email or Google), cloud saving and class leaderboard** (optional, free Supabase): see `docs/CLOUD_SETUP.md`.
 - **Scanned PDFs and photos** are read with built-in OCR (no internet needed after install).
@@ -73,6 +77,7 @@ src/
 api/ai.js                    server AI function (keeps the Gemini/Groq keys secret, rate limit, fallback)
 vercel.json                  lets the AI function run up to 60 seconds
 supabase/schema.sql          database tables and security rules
+supabase/survey.sql          evaluation survey tables
 docs/                        DEPLOY.md, CLOUD_SETUP.md, PLAY_STORE.md
 android/                     Capacitor Android project (icons and splash included)
 scripts/copy-ocr.mjs         copies OCR files into public/ocr after npm install

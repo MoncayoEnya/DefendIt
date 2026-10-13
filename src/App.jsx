@@ -7,6 +7,10 @@ import { buildAiPack, checkServerAI, hasAI, onServerAI } from './lib/ai.js'
 import { DEMO_PACK } from './lib/demo.js'
 import { newBadges } from './lib/badges.js'
 import { logActivity } from './lib/activity.js'
+import { applyTheme, watchSystemTheme } from './lib/theme.js'
+import { isNative, notifyOnce, reminderDue, scheduleNative } from './lib/reminders.js'
+import { focusTasks } from './lib/plan.js'
+import { taskDone } from './lib/activity.js'
 import { cloudEnabled, onAuthChange, pullData, pushData } from './lib/cloud.js'
 import { BottomNavigation, DesktopHeader, MobileHeader, Toast } from './components/Layout.jsx'
 import Overview from './pages/Overview.jsx'
@@ -27,12 +31,15 @@ import Plan from './pages/Plan.jsx'
 import Daily from './pages/Daily.jsx'
 import Explain from './pages/Explain.jsx'
 import Slides from './pages/Slides.jsx'
+import Reviewer from './pages/Reviewer.jsx'
+import Survey from './pages/Survey.jsx'
+import Evaluation from './pages/Evaluation.jsx'
 
-const NEEDS_PACK = ['guide', 'cards', 'typing', 'panel', 'match', 'group', 'plan', 'daily', 'explain']
+const NEEDS_PACK = ['guide', 'cards', 'typing', 'panel', 'match', 'group', 'plan', 'daily', 'explain', 'reviewer']
 const PAGES = {
   overview: Overview, guide: Guide, practice: Practice, cards: Flashcards, typing: TypingDefense, match: MatchLink,
   panel: MockPanel, group: Group, confidence: Confidence, badges: Badges, account: Account, leaderboard: Leaderboard,
-  more: More, settings: Settings, plan: Plan, daily: Daily, explain: Explain, slides: Slides,
+  more: More, settings: Settings, plan: Plan, daily: Daily, explain: Explain, slides: Slides, reviewer: Reviewer, survey: Survey, evaluation: Evaluation,
 }
 const pageFromHash = () => (PAGES[location.hash.slice(1)] ? location.hash.slice(1) : 'overview')
 
@@ -52,6 +59,10 @@ export default function App() {
   stateRef.current = state
 
   useEffect(() => save(state), [state])
+
+  // light / dark mode
+  useEffect(() => applyTheme(state.settings.theme), [state.settings.theme])
+  useEffect(() => watchSystemTheme(() => stateRef.current.settings.theme || 'system'), [])
 
   // is the app's own AI (server with a hidden key) available?
   const [, setAiTick] = useState(0)
@@ -121,6 +132,15 @@ export default function App() {
     if (!cloudEnabled) return
     let off = () => {}
     onAuthChange((u) => {
+      // back from Google sign-in: open the Account page
+      if (u) {
+        try {
+          if (sessionStorage.getItem('defendit:afterAuth')) {
+            sessionStorage.removeItem('defendit:afterAuth')
+            setTimeout(() => go('account'), 0)
+          }
+        } catch { /* private mode */ }
+      }
       setUser((prev) => {
         if (prev?.id !== u?.id) syncReady.current = false
         return u
@@ -225,9 +245,21 @@ export default function App() {
   }
 
   const pack = state.packs.find((p) => p.id === state.activeId)
+
+  // ---------- reminders ----------
+  const rem = state.profile.reminders
+  useEffect(() => {
+    if (isNative) scheduleNative({ enabled: !!rem?.enabled, time: rem?.time, defenseDate: pack?.defenseDate }).catch(() => {})
+  }, [rem?.enabled, rem?.time, pack?.defenseDate])
+  const tasksLeft = pack ? focusTasks(state, pack).filter((t) => !taskDone(state, t)).length : 0
+  const remind = !isNative && pack && tasksLeft > 0 && reminderDue(state)
+  useEffect(() => {
+    if (remind) notifyOnce(state, `${tasksLeft} task${tasksLeft === 1 ? '' : 's'} left in today's focus.`)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [remind])
   const uploader = { pick: () => fileRef.current?.click(), loadDemo, busy, error: uploadError, clearError: () => setUploadError('') }
   const cloud = { enabled: cloudEnabled, user, status: syncStatus, syncNow }
-  const props = { state, update, addXP, pack, go, uploader, cloud, track }
+  const props = { state, update, addXP, pack, go, uploader, cloud, track, remind: remind ? tasksLeft : 0 }
   const Page = PAGES[tab] || Overview
   const blocked = NEEDS_PACK.includes(tab) && !pack
 

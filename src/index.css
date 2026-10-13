@@ -7,19 +7,54 @@
   --color-brand: #075b3d;
   --color-brand-2: #2e8061;
   --color-brand-soft: #e7f3ec;
+  --color-brand-hover: #064d34;
+  --color-brand-ink: #1f3a2e;
   --color-bg: #f4f7f9;
   --color-card: #ffffff;
+  --color-card-hover: #fbfdfc;
   --color-ink: #151b22;
+  --color-ink-2: #2b343d;
   --color-sub: #65717d;
   --color-line: #e1e7eb;
+  --color-line-strong: #c4ced6;
   --color-track: #e6ebef;
   --color-blue: #1769aa;
   --color-blue-soft: #e8f1f9;
   --color-yellow: #f4c542;
   --color-yellow-soft: #fdf6df;
+  --color-yellow-ink: #7a5d00;
   --color-red: #d85c5c;
   --color-red-soft: #fbecec;
+  --color-red-ink: #9b3434;
 }
+
+/* Dark mode: same names, darker values. Set by Settings (System / Light / Dark). */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --color-brand: #23875d;
+  --color-brand-2: #3fae7e;
+  --color-brand-soft: #16302a;
+  --color-brand-hover: #1d7550;
+  --color-brand-ink: #bfe8d3;
+  --color-bg: #0e1317;
+  --color-card: #161c22;
+  --color-card-hover: #1b232a;
+  --color-ink: #e7ecf0;
+  --color-ink-2: #c8d0d7;
+  --color-sub: #94a0ab;
+  --color-line: #263039;
+  --color-line-strong: #3b4752;
+  --color-track: #25303a;
+  --color-blue: #63a8e3;
+  --color-blue-soft: #15283a;
+  --color-yellow: #e2b532;
+  --color-yellow-soft: #2c2712;
+  --color-yellow-ink: #ebc75c;
+  --color-red: #e47676;
+  --color-red-soft: #3a1f23;
+  --color-red-ink: #f2a7a7;
+}
+:root[data-theme="dark"] .text-brand { color: var(--color-brand-2); }
 
 html, body, #root { min-height: 100%; }
 body {
@@ -33,12 +68,12 @@ body {
 :focus-visible { outline: 2px solid var(--color-brand-2); outline-offset: 2px; border-radius: 6px; }
 
 @utility card { @apply bg-card border border-line rounded-lg; }
-@utility card-link { @apply bg-card border border-line rounded-lg transition-colors hover:border-brand-2/50 hover:bg-[#fbfdfc] cursor-pointer; }
+@utility card-link { @apply bg-card border border-line rounded-lg transition-colors hover:border-brand-2/50 hover:bg-card-hover cursor-pointer; }
 @utility btn { @apply inline-flex items-center justify-center gap-2 rounded-md px-4 h-10 text-[13px] font-semibold transition-colors disabled:opacity-40 disabled:pointer-events-none select-none; }
-@utility btn-primary { @apply inline-flex items-center justify-center gap-2 rounded-md px-4 h-10 text-[13px] font-semibold transition-colors disabled:opacity-40 disabled:pointer-events-none select-none bg-brand text-white hover:bg-[#064d34]; }
-@utility btn-outline { @apply inline-flex items-center justify-center gap-2 rounded-md px-4 h-10 text-[13px] font-semibold transition-colors disabled:opacity-40 disabled:pointer-events-none select-none bg-white border border-brand text-brand hover:bg-brand-soft; }
-@utility btn-ghost { @apply inline-flex items-center justify-center gap-2 rounded-md px-4 h-10 text-[13px] font-semibold transition-colors disabled:opacity-40 disabled:pointer-events-none select-none bg-white border border-line text-ink hover:bg-bg; }
-@utility input { @apply w-full rounded-md bg-white border border-line px-3 h-10 text-[14px] outline-none focus:border-brand-2 focus:ring-2 focus:ring-brand-soft; }
+@utility btn-primary { @apply inline-flex items-center justify-center gap-2 rounded-md px-4 h-10 text-[13px] font-semibold transition-colors disabled:opacity-40 disabled:pointer-events-none select-none bg-brand text-white hover:bg-brand-hover; }
+@utility btn-outline { @apply inline-flex items-center justify-center gap-2 rounded-md px-4 h-10 text-[13px] font-semibold transition-colors disabled:opacity-40 disabled:pointer-events-none select-none bg-card border border-brand text-brand hover:bg-brand-soft; }
+@utility btn-ghost { @apply inline-flex items-center justify-center gap-2 rounded-md px-4 h-10 text-[13px] font-semibold transition-colors disabled:opacity-40 disabled:pointer-events-none select-none bg-card border border-line text-ink hover:bg-bg; }
+@utility input { @apply w-full rounded-md bg-card border border-line px-3 h-10 text-[14px] outline-none focus:border-brand-2 focus:ring-2 focus:ring-brand-soft; }
 @utility eyebrow { @apply text-[11px] font-semibold uppercase tracking-[0.08em] text-sub; }
 @utility tag { @apply inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] font-medium bg-bg text-sub border border-line; }
 
@@ -52,3 +87,20 @@ body {
 .face { backface-visibility: hidden; }
 .back { transform: rotateY(180deg); }
 .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+
+/* Printable reviewer: the "paper" always uses light colors, on screen and in print. */
+.paper {
+  color-scheme: light;
+  --color-card: #ffffff; --color-bg: #f4f7f9; --color-ink: #151b22; --color-ink-2: #2b343d; --color-sub: #5b6670;
+  --color-line: #dfe5e9; --color-brand: #075b3d; --color-brand-2: #2e8061; --color-brand-soft: #e7f3ec;
+  background: #ffffff; color: #151b22;
+}
+:root[data-theme="dark"] .paper .text-brand { color: #075b3d; }
+
+@media print {
+  @page { margin: 14mm; }
+  html, body { background: #ffffff !important; }
+  body * { visibility: visible; }
+  .print-hide { display: none !important; }
+  main { padding: 0 !important; max-width: none !important; }
+}

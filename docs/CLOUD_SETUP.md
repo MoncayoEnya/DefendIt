@@ -14,6 +14,9 @@ syncing between devices and the class leaderboard. Supabase's free plan is enoug
 2. Open `supabase/schema.sql` from this project, copy everything, paste it, and click **Run**.
    You should see "Success. No rows returned."
 
+### 2b. Survey tables (for the evaluation survey)
+Open a **New query**, paste everything from `supabase/survey.sql`, and click **Run**.
+
 ## 3. Connect the app
 1. In Supabase, open **Project Settings** → **API** (or **Data API**).
 2. Copy the **Project URL** and the **anon / public** key.
@@ -68,6 +71,14 @@ The "Continue with Google" button works after these one-time steps:
 3. **Supabase**: **Authentication → URL Configuration**:
    - **Site URL**: your live site (for example `https://defendit.vercel.app`)
    - **Redirect URLs**: add `http://localhost:5173/**` (for testing) and `https://your-site/**`.
+
+### Google sign-in opens "localhost refused to connect" on a phone
+Supabase only sends people back to addresses you allowed. If your live link is not allowed,
+it falls back to the **Site URL**, which is often `http://localhost:3000`, and a phone cannot open that.
+Fix in Supabase → **Authentication → URL Configuration**:
+- **Site URL**: your live Vercel link, for example `https://defendit-xxxx.vercel.app` (not localhost)
+- **Redirect URLs**: add `https://defendit-xxxx.vercel.app/**` and keep `http://localhost:5173/**`
+- Click **Save**, then try again on the phone using the **Vercel link** (not a `192.168…` address).
 
 Notes:
 - While the Google consent screen is in "Testing" mode, only the Google accounts you add as

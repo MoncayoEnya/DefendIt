@@ -11,7 +11,7 @@ export default function Badges({ state }) {
       <ProgressBar value={(earned / list.length) * 100} className="mb-5 h-2" />
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {list.map((b) => (
-          <div key={b.id} className={`card flex gap-3 p-4 ${b.done ? '' : 'bg-white/60'}`}>
+          <div key={b.id} className={`card flex gap-3 p-4 ${b.done ? '' : 'bg-card/60'}`}>
             <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-full ${b.done ? 'bg-brand text-white' : 'bg-track text-sub'}`}>
               {b.done ? <b.icon size={20} strokeWidth={1.75} aria-hidden /> : <Lock size={17} strokeWidth={1.75} aria-hidden />}
             </span>

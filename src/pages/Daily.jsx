@@ -129,7 +129,7 @@ function CardRound({ cards, onAnswer, onDone }) {
       <input autoFocus className="input !h-11 font-mono" value={typed} onChange={(e) => setTyped(e.target.value)} readOnly={!!result}
         placeholder="Type the term" aria-label="Type the term" autoCapitalize="off" autoCorrect="off" spellCheck="false" />
       {result && (
-        <p className={`fade-up text-[14px] font-semibold ${result === 'wrong' ? 'text-red' : result === 'close' ? 'text-[#8a6a00]' : 'text-brand'}`}>
+        <p className={`fade-up text-[14px] font-semibold ${result === 'wrong' ? 'text-red' : result === 'close' ? 'text-yellow-ink' : 'text-brand'}`}>
           {result === 'right' ? 'Correct' : result === 'close' ? `Close enough: ${card.term}` : `Answer: ${card.term}`}
         </p>
       )}
@@ -193,7 +193,7 @@ function QuestionRound({ state, pack, qIndex, onDone }) {
         <div className="fade-up space-y-3">
           <div className="text-[28px] font-bold text-brand">{result.score}<span className="text-[15px] text-sub">/10</span></div>
           <p className="text-[14px]">{result.verdict}</p>
-          {result.betterAnswer && <div className="rounded-md border border-brand-2/25 bg-brand-soft p-3 text-[13px] text-[#1f3a2e]"><div className="eyebrow mb-1 !text-brand">Stronger answer</div>{result.betterAnswer}</div>}
+          {result.betterAnswer && <div className="rounded-md border border-brand-2/25 bg-brand-soft p-3 text-[13px] text-brand-ink"><div className="eyebrow mb-1 !text-brand">Stronger answer</div>{result.betterAnswer}</div>}
           <button className="btn-primary h-11 w-full" onClick={() => onDone(result.score)}>Finish challenge</button>
         </div>
       ) : (
