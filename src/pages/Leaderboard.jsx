@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
-import { AlertCircle, Copy, Loader2, LogIn, RefreshCw, Trophy } from 'lucide-react'
+import { AlertCircle, ChevronRight, Copy, Info, Loader2, LogIn, RefreshCw, Trophy } from 'lucide-react'
+import ProfileCard from '../components/ProfileCard.jsx'
 import { Avatar } from '../components/Layout.jsx'
 import { IconBox, Notice, PageHeader } from '../components/ui.jsx'
-import { cloudEnabled, fetchLeaderboard, leaderboardRow, leaveLeaderboard, normalizeCode, pushLeaderboard } from '../lib/cloud.js'
+import { cloudEnabled, fetchLeaderboard, leaderboardRow, leaveLeaderboard, normalizeCode, profileColumnsMissing, profileRow, pushLeaderboard } from '../lib/cloud.js'
 
 const SORTS = [
   { id: 'xp', label: 'XP', fmt: (r) => `${r.xp.toLocaleString()} XP` },
@@ -18,6 +19,7 @@ export default function Leaderboard({ state, update, cloud, go }) {
   const [sort, setSort] = useState('xp')
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState('')
+  const [view, setView] = useState(null) // the row whose profile is open
 
   const load = useCallback(async () => {
     if (!cloud.user || !code) return
@@ -111,20 +113,27 @@ export default function Leaderboard({ state, update, cloud, go }) {
         {sorted.map((r, i) => {
           const mine = r.user_id === cloud.user.id
           return (
-            <div key={r.user_id} className={`flex items-center gap-3 px-4 py-3 ${mine ? 'bg-brand-soft/60' : ''}`}>
+            <button key={r.user_id} onClick={() => setView({ row: mine ? { ...r, ...me, ...profileRow(state) } : r, rank: i + 1, mine })} aria-label={`Open ${r.display_name}'s profile`}
+              className={`flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-bg ${mine ? 'bg-brand-soft/60' : ''}`}>
               <span className={`w-6 text-center text-[13px] font-bold ${i < 3 ? 'text-brand' : 'text-sub'}`}>{i < 3 ? <Trophy size={16} className="mx-auto" aria-label={`Rank ${i + 1}`} /> : i + 1}</span>
-              <Avatar name={r.display_name} size={32} />
+              <Avatar name={r.full_name || r.display_name} photo={mine ? state.profile.photo : r.photo} size={36} />
               <div className="min-w-0 flex-1">
                 <div className="truncate text-[14px] font-semibold">{r.display_name}{mine && <span className="ml-1.5 font-normal text-sub">(you)</span>}</div>
-                <div className="text-[12px] text-sub">{r.badges} badge{r.badges === 1 ? '' : 's'} · {r.streak}-day streak</div>
+                <div className="truncate text-[12px] text-sub">{[r.course, `${r.badges} badge${r.badges === 1 ? '' : 's'}`, `${r.streak}-day streak`].filter(Boolean).join(' · ')}</div>
               </div>
               <div className="text-right text-[14px] font-semibold">{fmt(mine ? { ...r, ...me } : r)}</div>
-            </div>
+              <ChevronRight size={16} className="shrink-0 text-sub" aria-hidden />
+            </button>
           )
         })}
       </section>
 
+      <p className="mt-3 text-[12px] text-sub">Tap a name to see their profile.</p>
+      {profileColumnsMissing && (
+        <div className="mt-3"><Notice tone="yellow" icon={Info}>Photos, courses and badges need one more setup step: run <b>supabase/leaderboard-profile.sql</b> in Supabase.</Notice></div>
+      )}
       <button className="mt-4 text-[13px] font-medium text-sub hover:text-red" onClick={leave}>Leave this class</button>
+      {view && <ProfileCard row={view.row} rank={view.rank} mine={view.mine} onClose={() => setView(null)} onEdit={() => go('profile')} />}
     </div>
   )
 }

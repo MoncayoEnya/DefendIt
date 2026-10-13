@@ -1,4 +1,4 @@
-import { BookOpenText, UserRound, Award, ClipboardList, Printer, CalendarDays, MessageSquareText, Presentation, Timer, Cloud, CloudOff, HeartPulse, Keyboard, Link2, ListOrdered, Settings as SettingsIcon, Swords, UsersRound } from 'lucide-react'
+import { Info, BookOpenText, UserRound, Award, ClipboardList, Printer, CalendarDays, MessageSquareText, Presentation, Timer, Cloud, CloudOff, HeartPulse, Keyboard, Link2, ListOrdered, Settings as SettingsIcon, Swords, UsersRound } from 'lucide-react'
 import { FocusChecklist, ThesisDocumentCard, ThesisUploadCard, UploadNewButton } from '../components/Dashboard.jsx'
 import { ListLink, PageHeader, SectionTitle } from '../components/ui.jsx'
 import { levelInfo } from '../lib/storage.js'
@@ -56,6 +56,7 @@ export default function More({ state, update, go, uploader, cloud, pack }) {
         <ListLink icon={UserRound} tone="brand" title="Your profile" meta={state.profile.fullName || state.profile.name || 'Name, groupmates, school'} onClick={() => go('profile')} />
         <ListLink icon={cloud?.user ? Cloud : CloudOff} tone="brand" title="Account and cloud saving" meta={cloud?.user ? cloud.user.email : 'Sign in to back up your progress'} onClick={() => go('account')} />
         <ListLink icon={Swords} tone="brand" title="All practice modes" meta="Flashcards, typing defense and the panel" onClick={() => go('practice')} />
+        <ListLink icon={Info} title="About DefendIt" meta="What the app does, and common questions" onClick={() => go('welcome')} />
         <ListLink icon={SettingsIcon} title="Settings" meta={hasAI(state) ? 'AI mode is on' : 'AI is off: offline mode'} onClick={() => go('settings')} />
       </div>
     </div>

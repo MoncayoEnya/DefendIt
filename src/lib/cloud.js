@@ -151,11 +151,32 @@ export function leaderboardRow(state) {
   }
 }
 
+// Extra details classmates see when they open your profile (needs supabase/leaderboard-profile.sql).
+export function profileRow(state) {
+  const p = state.profile
+  const share = p.shareProfile !== false
+  return {
+    full_name: (p.fullName || '').slice(0, 60) || null,
+    photo: share && p.photo && p.photo.length <= 20000 ? p.photo : null,
+    course: share ? (p.course || '').slice(0, 40) || null : null,
+    school: share ? (p.school || '').slice(0, 80) || null : null,
+    badge_ids: Object.keys(p.badges || {}),
+  }
+}
+
+export let profileColumnsMissing = false
+
 export async function pushLeaderboard(userId, state) {
   const sb = await getClient()
   const code = normalizeCode(state.profile.classCode)
   if (!code) return
-  const { error } = await sb.from('leaderboard').upsert({ class_code: code, user_id: userId, ...leaderboardRow(state), updated_at: new Date().toISOString() })
+  const base = { class_code: code, user_id: userId, ...leaderboardRow(state), updated_at: new Date().toISOString() }
+  let { error } = await sb.from('leaderboard').upsert({ ...base, ...profileRow(state) })
+  // the profile columns are not added yet: save the scores anyway
+  if (error && /column|schema cache/i.test(error.message)) {
+    profileColumnsMissing = true
+    ;({ error } = await sb.from('leaderboard').upsert(base))
+  } else if (!error) profileColumnsMissing = false
   if (error) throw error
 }
 

@@ -65,6 +65,27 @@ export function speakable(text, profile) {
   return fillProfile(text, profile).replace(ANY, (m) => m.replace(/[[\](){}<>]/g, ''))
 }
 
+// Turns a picked image into a small square photo (about 10 KB) that fits in the cloud and on the leaderboard.
+export function squarePhoto(file, size = 160) {
+  return new Promise((resolve, reject) => {
+    if (!file?.type?.startsWith('image/')) return reject(new Error('Please choose a photo (JPG, PNG or WebP).'))
+    const url = URL.createObjectURL(file)
+    const img = new Image()
+    img.onload = () => {
+      const s = Math.min(img.naturalWidth, img.naturalHeight)
+      const c = document.createElement('canvas')
+      c.width = c.height = size
+      c.getContext('2d').drawImage(img, (img.naturalWidth - s) / 2, (img.naturalHeight - s) / 2, s, s, 0, 0, size, size)
+      URL.revokeObjectURL(url)
+      let out = c.toDataURL('image/webp', 0.8)
+      if (!out.startsWith('data:image/webp')) out = c.toDataURL('image/jpeg', 0.8) // older Safari
+      resolve(out)
+    }
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Could not open that photo. Try another one.')) }
+    img.src = url
+  })
+}
+
 // First and full name from a Google account
 export function namesFromUser(user) {
   const md = user?.user_metadata || {}

@@ -36,6 +36,7 @@ import Survey from './pages/Survey.jsx'
 import Evaluation from './pages/Evaluation.jsx'
 import Profile from './pages/Profile.jsx'
 import Read from './pages/Read.jsx'
+import Landing from './pages/Landing.jsx'
 import { saveText } from './lib/textstore.js'
 import { namesFromUser } from './lib/profile.js'
 
@@ -43,7 +44,7 @@ const NEEDS_PACK = ['guide', 'cards', 'typing', 'panel', 'match', 'group', 'plan
 const PAGES = {
   overview: Overview, guide: Guide, practice: Practice, cards: Flashcards, typing: TypingDefense, match: MatchLink,
   panel: MockPanel, group: Group, confidence: Confidence, badges: Badges, account: Account, leaderboard: Leaderboard,
-  more: More, settings: Settings, plan: Plan, daily: Daily, explain: Explain, slides: Slides, reviewer: Reviewer, survey: Survey, evaluation: Evaluation, profile: Profile, read: Read,
+  more: More, settings: Settings, plan: Plan, daily: Daily, explain: Explain, slides: Slides, reviewer: Reviewer, survey: Survey, evaluation: Evaluation, profile: Profile, read: Read, welcome: Landing,
 }
 const pageFromHash = () => (PAGES[location.hash.slice(1)] ? location.hash.slice(1) : 'overview')
 
@@ -54,7 +55,8 @@ export default function App() {
     s.packs = s.packs.map((p) => ({ ...p, title: cleanTitle(p.title, p.fileName) }))
     return s
   })
-  const [tab, setTab] = useState(pageFromHash)
+  // first visit on the website (not the Android app): show the landing page
+  const [tab, setTab] = useState(() => (!location.hash && !isNative && !state.settings.seenLanding && !state.packs.length ? 'welcome' : pageFromHash()))
   const [toast, setToast] = useState(null)
   const [busy, setBusy] = useState(null)
   const [uploadError, setUploadError] = useState('')
@@ -143,8 +145,8 @@ export default function App() {
         if (g.full || g.photo) {
           setState((s) => {
             const p = s.profile
-            if ((p.fullName || !g.full) && (p.name || !g.first) && (p.photo === g.photo || !g.photo)) return s
-            return { ...s, profile: { ...p, name: p.name || g.first, fullName: p.fullName || g.full, photo: g.photo || p.photo } }
+            if ((p.fullName || !g.full) && (p.name || !g.first) && (p.photo || !g.photo)) return s
+            return { ...s, profile: { ...p, name: p.name || g.first, fullName: p.fullName || g.full, photo: p.photo || g.photo } }
           })
         }
         try {
@@ -278,6 +280,11 @@ export default function App() {
   const props = { state, update, addXP, pack, go, uploader, cloud, track, remind: remind ? tasksLeft : 0 }
   const Page = PAGES[tab] || Overview
   const blocked = NEEDS_PACK.includes(tab) && !pack
+
+  if (tab === 'welcome') {
+    const enter = () => update((s) => ({ ...s, settings: { ...s.settings, seenLanding: true } }))
+    return <Landing start={() => { enter(); go('overview'); window.scrollTo(0, 0) }} sample={() => { enter(); loadDemo(); window.scrollTo(0, 0) }} />
+  }
 
   return (
     <div className="min-h-screen">

@@ -47,3 +47,12 @@ create policy "signed-in users can read" on public.leaderboard for select to aut
 create policy "insert own row" on public.leaderboard for insert to authenticated with check (auth.uid() = user_id);
 create policy "update own row" on public.leaderboard for update to authenticated using (auth.uid() = user_id) with check (auth.uid() = user_id);
 create policy "delete own row" on public.leaderboard for delete to authenticated using (auth.uid() = user_id);
+
+-- 2b) Profile details on the leaderboard
+alter table public.leaderboard add column if not exists photo text;
+alter table public.leaderboard drop constraint if exists leaderboard_photo_check;
+alter table public.leaderboard add constraint leaderboard_photo_check check (photo is null or char_length(photo) <= 20000);
+alter table public.leaderboard add column if not exists course text check (course is null or char_length(course) <= 40);
+alter table public.leaderboard add column if not exists school text check (school is null or char_length(school) <= 80);
+alter table public.leaderboard add column if not exists full_name text check (full_name is null or char_length(full_name) <= 60);
+alter table public.leaderboard add column if not exists badge_ids text[] not null default '{}';

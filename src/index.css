@@ -3,6 +3,7 @@
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --font-serif: "Newsreader", Georgia, "Times New Roman", serif;
 
   --color-brand: #075b3d;
   --color-brand-2: #2e8061;
@@ -87,6 +88,14 @@ body {
 .face { backface-visibility: hidden; }
 .back { transform: rotateY(180deg); }
 .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+
+/* Landing page: always light, whatever the app theme is. */
+.landing {
+  color-scheme: light;
+  --color-card: #ffffff; --color-bg: #f4f7f9; --color-ink: #151b22; --color-ink-2: #2b343d; --color-sub: #5b6670;
+  --color-line: #dfe5e9; --color-brand: #075b3d; --color-brand-hover: #064d34; --color-brand-soft: #e7f3ec;
+}
+.landing :focus-visible { outline: 2px solid #075b3d; outline-offset: 2px; }
 
 /* Printable reviewer: the "paper" always uses light colors, on screen and in print. */
 .paper {

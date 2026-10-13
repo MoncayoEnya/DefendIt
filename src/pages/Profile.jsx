@@ -1,9 +1,9 @@
-import { useState } from 'react'
-import { Check, Mic, UserRound } from 'lucide-react'
+import { useRef, useState } from 'react'
+import { Camera, Check, Mic, Trash2, UserRound } from 'lucide-react'
 import { PageHeader } from '../components/ui.jsx'
 import { Avatar } from '../components/Layout.jsx'
 import { OpeningText } from '../components/Opening.jsx'
-import { namesFromUser } from '../lib/profile.js'
+import { namesFromUser, squarePhoto } from '../lib/profile.js'
 import { levelInfo } from '../lib/storage.js'
 
 const FORM = [
@@ -40,7 +40,7 @@ export default function Profile({ state, update, pack, cloud, go }) {
       <PageHeader eyebrow="Profile" title="Your profile" desc="Your details fill in the blanks in your opening line." />
 
       <section className="card mb-4 flex items-center gap-4 p-4 md:p-5">
-        <Avatar name={form.name || form.fullName || 'Student'} photo={state.profile.photo} size={56} />
+        <PhotoPicker state={state} update={update} name={form.name || form.fullName || 'Student'} google={google} />
         <div className="min-w-0 flex-1">
           <div className="truncate text-[17px] font-semibold">{form.fullName || form.name || 'Student'}</div>
           <div className="text-[13px] text-sub">Level {lv.level} · {lv.name} · {state.profile.xp} XP</div>
@@ -65,6 +65,14 @@ export default function Profile({ state, update, pack, cloud, go }) {
             </div>
           ))}
         </div>
+        <label className="mt-5 flex cursor-pointer items-start gap-3 rounded-md border border-line p-3">
+          <input type="checkbox" className="mt-0.5 h-4 w-4 accent-[var(--color-brand)]" checked={state.profile.shareProfile !== false}
+            onChange={(e) => update((s) => ({ ...s, profile: { ...s.profile, shareProfile: e.target.checked } }))} />
+          <span>
+            <span className="block text-[13px] font-medium">Show my photo, course and school to classmates</span>
+            <span className="block text-[12px] text-sub">On the class leaderboard. Your name and scores are always shown there.</span>
+          </span>
+        </label>
         <div className="mt-5 flex items-center gap-3">
           <button className="btn-primary" disabled={!changed}><Check size={16} /> Save profile</button>
           {saved && !changed && <span className="text-[13px] font-medium text-brand">Saved</span>}
@@ -82,6 +90,29 @@ export default function Profile({ state, update, pack, cloud, go }) {
       {!pack?.elevatorPitch && (
         <p className="mt-4 flex items-center gap-2 text-[13px] text-sub"><UserRound size={15} aria-hidden /> Upload your thesis to see your opening line here.</p>
       )}
+    </div>
+  )
+}
+
+function PhotoPicker({ state, update, name, google }) {
+  const ref = useRef()
+  const [err, setErr] = useState('')
+  const photo = state.profile.photo
+  const setPhoto = (v) => update((s) => ({ ...s, profile: { ...s.profile, photo: v } }))
+  async function pick(file) {
+    setErr('')
+    try { setPhoto(await squarePhoto(file)) } catch (e) { setErr(e.message) }
+    if (ref.current) ref.current.value = ''
+  }
+  return (
+    <div className="flex shrink-0 flex-col items-center gap-1">
+      <button type="button" onClick={() => ref.current.click()} className="group relative rounded-full" aria-label={photo ? 'Change profile picture' : 'Add profile picture'}>
+        <Avatar name={name} photo={photo} size={72} />
+        <span className="absolute -bottom-0.5 -right-0.5 grid h-7 w-7 place-items-center rounded-full border-2 border-card bg-brand text-white"><Camera size={14} aria-hidden /></span>
+      </button>
+      <input ref={ref} type="file" accept="image/*" className="hidden" onChange={(e) => pick(e.target.files[0])} />
+      {photo && <button type="button" className="flex items-center gap-1 text-[11px] font-medium text-sub hover:text-red" onClick={() => setPhoto(google?.photo && photo !== google.photo ? google.photo : '')}><Trash2 size={12} /> Remove</button>}
+      {err && <p className="max-w-28 text-center text-[11px] text-red-ink">{err}</p>}
     </div>
   )
 }
